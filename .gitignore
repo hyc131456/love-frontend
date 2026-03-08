@@ -16,4 +16,4 @@ unpackage/dist/dev/
 *.pyc
 
 /dist
-/docker-h5
+/docker-h5/dist
