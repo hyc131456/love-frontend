@@ -1,2 +1,2 @@
-# -app
+# love_app
 个人情侣app, 生活日常记录
