@@ -1,0 +1,156 @@
+{
+    "pages": [
+        {
+            "path": "pages/index/index",
+            "style": {
+                "navigationBarTitleText": "心迹",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/login/index",
+            "style": {
+                "navigationBarTitleText": "登录",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/couple/index",
+            "style": {
+                "navigationBarTitleText": "情侣配对",
+                "navigationStyle": "custom"
+            }
+        },
+        {
+            "path": "pages/calendar/index",
+            "style": {
+                "navigationBarTitleText": "日历"
+            }
+        },
+        {
+            "path": "pages/diary/index",
+            "style": {
+                "navigationBarTitleText": "回忆墙"
+            }
+        },
+        {
+            "path": "pages/diary/edit",
+            "style": {
+                "navigationBarTitleText": "写日记"
+            }
+        },
+        {
+            "path": "pages/diary/detail",
+            "style": {
+                "navigationBarTitleText": "日记详情"
+            }
+        },
+        {
+            "path": "pages/wish/index",
+            "style": {
+                "navigationBarTitleText": "心愿"
+            }
+        },
+        {
+            "path": "pages/mine/index",
+            "style": {
+                "navigationBarTitleText": "我的"
+            }
+        },
+        {
+            "path": "pages/saving/index",
+            "style": {
+                "navigationBarTitleText": "共同储蓄"
+            }
+        },
+        {
+            "path": "pages/saving/detail",
+            "style": {
+                "navigationBarTitleText": "储蓄详情"
+            }
+        },
+        {
+            "path": "pages/achieve/index",
+            "style": {
+                "navigationBarTitleText": "成就墙"
+            }
+        },
+        {
+            "path": "pages/recipe/index",
+            "style": {
+                "navigationBarTitleText": "家庭菜谱"
+            }
+        },
+        {
+            "path": "pages/recipe/edit",
+            "style": {
+                "navigationBarTitleText": "编辑菜谱"
+            }
+        },
+        {
+            "path": "pages/recipe/detail",
+            "style": {
+                "navigationBarTitleText": "菜谱详情"
+            }
+        },
+        {
+            "path": "pages/gallery/index",
+            "style": {
+                "navigationBarTitleText": "图片库"
+            }
+        },
+        {
+            "path": "pages/period/index",
+            "style": {
+                "navigationBarTitleText": "姨妈期助手"
+            }
+        }
+    ],
+    "globalStyle": {
+        "navigationBarTextStyle": "black",
+        "navigationBarTitleText": "心迹·情侣时光",
+        "navigationBarBackgroundColor": "#FFF9FA",
+        "backgroundColor": "#FFF9FA",
+        "app-plus": {
+            "background": "#FFF9FA"
+        }
+    },
+    "tabBar": {
+        "color": "#B3B3B3",
+        "selectedColor": "#FF6B9D",
+        "backgroundColor": "#FFFFFF",
+        "borderStyle": "white",
+        "list": [
+            {
+                "pagePath": "pages/index/index",
+                "iconPath": "static/tabbar/home.svg",
+                "selectedIconPath": "static/tabbar/home-active.svg",
+                "text": "首页"
+            },
+            {
+                "pagePath": "pages/calendar/index",
+                "iconPath": "static/tabbar/calendar.svg",
+                "selectedIconPath": "static/tabbar/calendar-active.svg",
+                "text": "日历"
+            },
+            {
+                "pagePath": "pages/diary/index",
+                "iconPath": "static/tabbar/diary.svg",
+                "selectedIconPath": "static/tabbar/diary-active.svg",
+                "text": "日记"
+            },
+            {
+                "pagePath": "pages/wish/index",
+                "iconPath": "static/tabbar/wish.svg",
+                "selectedIconPath": "static/tabbar/wish-active.svg",
+                "text": "心愿"
+            },
+            {
+                "pagePath": "pages/mine/index",
+                "iconPath": "static/tabbar/mine.svg",
+                "selectedIconPath": "static/tabbar/mine-active.svg",
+                "text": "我的"
+            }
+        ]
+    }
+}
