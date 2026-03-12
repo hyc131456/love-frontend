@@ -1,20 +1,18 @@
 <template>
   <view class="mine-page">
-    <!-- 用户信息卡 -->
     <view class="user-card">
-      <image class="avatar" :src="userInfo?.avatar || '/static/default-avatar.png'" />
+      <image class="avatar" :src="userInfo?.avatar || '/static/default-avatar.svg'" />
       <view class="user-info">
         <text class="nickname">{{ userInfo?.nickname || '未登录' }}</text>
         <text class="role">{{ userInfo?.role === 'A' ? '空间创建者' : '空间成员' }}</text>
       </view>
       <view class="edit-btn" @click="editProfile">编辑</view>
     </view>
-    
-    <!-- 数据统计 -->
+
     <view class="stats-card">
       <view class="stat-item">
         <text class="stat-num">{{ coupleInfo?.daysTogether || 0 }}</text>
-        <text class="stat-label">在一起(天)</text>
+        <text class="stat-label">在一起天数</text>
       </view>
       <view class="stat-item" @click="goTo('/pages/diary/index')">
         <text class="stat-num">{{ stats.diaryCount }}</text>
@@ -29,16 +27,20 @@
         <text class="stat-label">成就</text>
       </view>
     </view>
-    
-    <!-- 功能菜单 -->
+
     <view class="menu-list">
+      <view class="menu-item" @click="goTo('/pages/anniversary/index')">
+        <text class="menu-icon">💖</text>
+        <text class="menu-text">纪念日</text>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" @click="goTo('/pages/gallery/index')">
         <text class="menu-icon">🖼️</text>
         <text class="menu-text">图片库</text>
         <text class="menu-arrow">›</text>
       </view>
       <view class="menu-item" @click="goTo('/pages/achieve/index')">
-        <text class="menu-icon">🏆</text>
+        <text class="menu-icon">🏅</text>
         <text class="menu-text">成就墙</text>
         <text class="menu-arrow">›</text>
       </view>
@@ -53,17 +55,16 @@
         <text class="menu-arrow">›</text>
       </view>
       <view class="menu-item" @click="goTo('/pages/period/index')">
-        <text class="menu-icon">🌸</text>
+        <text class="menu-icon">🌙</text>
         <text class="menu-text">姨妈期助手</text>
         <text class="menu-arrow">›</text>
       </view>
     </view>
-    
-    <!-- 系统菜单 -->
+
     <view class="menu-list">
       <view v-if="showInvite" class="menu-item" @click="invitePartner">
-        <text class="menu-icon">💌</text>
-        <text class="menu-text">邀请TA</text>
+        <text class="menu-icon">🤝</text>
+        <text class="menu-text">邀请 TA</text>
         <text class="menu-arrow">›</text>
       </view>
       <view v-if="showUnbind" class="menu-item" @click="unbindCouple">
@@ -73,8 +74,11 @@
       </view>
       <view class="menu-item">
         <text class="menu-icon">🔔</text>
-        <text class="menu-text">消息通知</text>
-        <switch :checked="enableNotification" @change="toggleNotification" color="#FF6B9D" />
+        <view class="menu-content">
+          <text class="menu-text">消息通知</text>
+          <text class="menu-subtext">控制首页纪念日提醒卡片显示</text>
+        </view>
+        <switch :checked="enableNotification" color="#FF6B9D" @change="toggleNotification" />
       </view>
       <view class="menu-item" @click="showAbout">
         <text class="menu-icon">ℹ️</text>
@@ -82,44 +86,34 @@
         <text class="menu-arrow">›</text>
       </view>
     </view>
-    
-    <!-- 退出登录 -->
+
     <view class="logout-section">
       <button class="btn-logout" @click="logout">退出登录</button>
     </view>
-    
-    <!-- 编辑资料弹窗 -->
+
     <view v-if="showEditModal" class="modal-mask" @click="closeEditModal">
       <view class="modal-content" @click.stop>
         <text class="modal-title">编辑资料</text>
-        
-        <!-- 头像 -->
+
         <view class="edit-avatar-section" @click="chooseAvatar">
-          <image class="edit-avatar" :src="editForm.avatar || '/static/default-avatar.png'" />
+          <image class="edit-avatar" :src="editForm.avatar || '/static/default-avatar.svg'" />
           <text class="edit-avatar-tip">点击更换头像</text>
         </view>
-        
-        <!-- 昵称 -->
+
         <input v-model="editForm.nickname" class="input" placeholder="请输入昵称" />
-        
-        <!-- 性别 -->
+
         <view class="gender-section">
           <text class="section-label">性别</text>
           <view class="gender-options">
-            <view 
-              class="gender-item" 
-              :class="{ active: editForm.gender === 1 }"
-              @click="editForm.gender = 1"
-            >👨 男</view>
-            <view 
-              class="gender-item" 
-              :class="{ active: editForm.gender === 2 }"
-              @click="editForm.gender = 2"
-            >👩 女</view>
+            <view class="gender-item" :class="{ active: editForm.gender === 1 }" @click="editForm.gender = 1">
+              👦 男
+            </view>
+            <view class="gender-item" :class="{ active: editForm.gender === 2 }" @click="editForm.gender = 2">
+              👧 女
+            </view>
           </view>
         </view>
-        
-        <!-- 生日 -->
+
         <view class="date-picker-wrapper">
           <picker mode="date" :value="editForm.birthday" :end="today" @change="onBirthdayChange">
             <view class="date-picker-display">
@@ -128,7 +122,7 @@
             </view>
           </picker>
         </view>
-        
+
         <button class="btn-primary" @click="saveProfile">保存</button>
       </view>
     </view>
@@ -136,39 +130,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { achievementApi, coupleApi, diaryApi, uploadApi, userApi, wishApi } from '@/api'
 import { useUserStore } from '@/stores/user'
-import { userApi, uploadApi, diaryApi, wishApi, coupleApi, achievementApi } from '@/api'
 
-// 获取今天日期
 const today = new Date().toISOString().split('T')[0]
-
-// ... 保持原有不变的变量和基础函数 ...
-
-// 选择头像部分不变 ... 略过无关但需要保持原样
-// 由于使用 ReplaceFileContent，需根据原范围完整提供
-
 const userStore = useUserStore()
 
 const userInfo = computed(() => userStore.userInfo)
 const coupleInfo = computed(() => userStore.coupleInfo)
 
-// 根据状态判断是否展示邀请按钮
 const showInvite = computed(() => {
   if (!userInfo.value) return false
-  // 1. 完全没有空间时，需要显示邀请
   if (!userInfo.value.coupleId) return true
-  // 2. 有空间，但如果还没有伴侣信息，则仍然允许显示邀请（去查看邀请码）
-  // 如果有了 partner，则绝对不显示邀请
   return !coupleInfo.value?.partner
 })
 
-// 根据状态判断是否展示解除配对按钮
-const showUnbind = computed(() => {
-  // 仅当身处空间 且 确认已有伴侣加入时，才展示解绑按钮
-  return !!userInfo.value?.coupleId && !!coupleInfo.value?.partner
-})
-
+const showUnbind = computed(() => !!userInfo.value?.coupleId && !!coupleInfo.value?.partner)
 const enableNotification = ref(true)
 
 const stats = ref({
@@ -177,7 +156,6 @@ const stats = ref({
   achieveCount: 0
 })
 
-// 编辑弹窗
 const showEditModal = ref(false)
 const editForm = ref({
   nickname: '',
@@ -186,7 +164,14 @@ const editForm = ref({
   birthday: ''
 })
 
-// tabBar 页面列表
+watch(
+  () => userInfo.value?.enableNotification,
+  value => {
+    enableNotification.value = value !== 0
+  },
+  { immediate: true }
+)
+
 const tabBarPages = [
   '/pages/index/index',
   '/pages/calendar/index',
@@ -195,7 +180,6 @@ const tabBarPages = [
   '/pages/mine/index'
 ]
 
-// 页面跳转
 const goTo = (url: string) => {
   if (!url) return
   const isTabBarPage = tabBarPages.some(page => url.startsWith(page))
@@ -206,7 +190,6 @@ const goTo = (url: string) => {
   }
 }
 
-// 编辑资料
 const editProfile = () => {
   editForm.value = {
     nickname: userInfo.value?.nickname || '',
@@ -217,18 +200,16 @@ const editProfile = () => {
   showEditModal.value = true
 }
 
-// 关闭编辑弹窗
 const closeEditModal = () => {
   showEditModal.value = false
 }
 
-// 选择头像
 const chooseAvatar = () => {
   uni.chooseImage({
     count: 1,
     sizeType: ['compressed'],
     sourceType: ['album', 'camera'],
-    success: async (res) => {
+    success: async res => {
       const tempFilePath = res.tempFilePaths[0]
       try {
         uni.showLoading({ title: '上传中...' })
@@ -244,18 +225,16 @@ const chooseAvatar = () => {
   })
 }
 
-// 生日选择变更
 const onBirthdayChange = (e: any) => {
   editForm.value.birthday = e.detail.value
 }
 
-// 保存资料
 const saveProfile = async () => {
   if (!editForm.value.nickname.trim()) {
     uni.showToast({ title: '请输入昵称', icon: 'none' })
     return
   }
-  
+
   try {
     await userApi.updateProfile({
       nickname: editForm.value.nickname,
@@ -263,67 +242,70 @@ const saveProfile = async () => {
       gender: editForm.value.gender || null,
       birthday: editForm.value.birthday || null
     })
-    
+    await userStore.fetchUserInfo()
     uni.showToast({ title: '保存成功', icon: 'success' })
     closeEditModal()
-    // 刷新用户信息
-    userStore.fetchUserInfo()
   } catch (e) {
-    // 错误已在 request 封装中处理
+    console.error('保存资料失败', e)
   }
 }
 
-// 邀请伴侣
 const invitePartner = () => {
   if (coupleInfo.value?.partner) {
-    uni.showToast({ title: '已有伴侣', icon: 'none' })
+    uni.showToast({ title: '已经有伴侣啦', icon: 'none' })
     return
   }
   uni.navigateTo({ url: '/pages/couple/index' })
 }
 
-// 解除配对
 const unbindCouple = () => {
   uni.showModal({
-    title: '残酷确认',
-    content: '解除配对后，对方信息将从您的空间中抹除，且不再共享新的记录。您确定要这么做吗？',
+    title: '确认解除配对',
+    content: '解除后将停止共享新的记录，确认继续吗？',
     confirmColor: '#FF4757',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          uni.showLoading({ title: '解绑中...' })
-          await coupleApi.unbind()
-          uni.hideLoading()
-          uni.showToast({ title: '已成功解除配对', icon: 'success' })
-          userStore.fetchUserInfo()
-        } catch (e) {
-          uni.hideLoading()
-        }
+    success: async res => {
+      if (!res.confirm) return
+      try {
+        uni.showLoading({ title: '解绑中...' })
+        await coupleApi.unbind()
+        uni.hideLoading()
+        await userStore.fetchUserInfo()
+        await loadStats()
+        uni.showToast({ title: '已解除配对', icon: 'success' })
+      } catch (e) {
+        uni.hideLoading()
+        console.error('解除配对失败', e)
       }
     }
   })
 }
 
-// 切换通知
-const toggleNotification = () => {
-  enableNotification.value = !enableNotification.value
+const toggleNotification = async (e: any) => {
+  const nextValue = !!e.detail.value
+  try {
+    await userApi.updateProfile({ enableNotification: nextValue ? 1 : 0 })
+    enableNotification.value = nextValue
+    await userStore.fetchUserInfo()
+    uni.showToast({ title: nextValue ? '已开启提醒' : '已关闭提醒', icon: 'none' })
+  } catch (error) {
+    enableNotification.value = !nextValue
+    console.error('更新通知开关失败', error)
+  }
 }
 
-// 关于我们
 const showAbout = () => {
   uni.showModal({
     title: '心迹·情侣时光',
-    content: '版本 1.0.0\n\n专为情侣设计的私密协作小程序\n记录爱情，共享时光',
+    content: '版本 1.0.0\n\n专为情侣设计的私密协作小程序，记录爱情，分享时光。',
     showCancel: false
   })
 }
 
-// 退出登录
 const logout = () => {
   uni.showModal({
     title: '提示',
     content: '确定要退出登录吗？',
-    success: (res) => {
+    success: res => {
       if (res.confirm) {
         userStore.logout()
       }
@@ -331,19 +313,27 @@ const logout = () => {
   })
 }
 
-// 加载统计数据
+const resetStats = () => {
+  stats.value = {
+    diaryCount: 0,
+    wishCount: 0,
+    achieveCount: 0
+  }
+}
+
 const loadStats = async () => {
+  if (!userStore.userInfo?.coupleId) {
+    resetStats()
+    return
+  }
+
   try {
-    // 获取日记列表来统计数量
     const diaryData = await diaryApi.getList(1, 1000)
-    console.log(diaryData)
     stats.value.diaryCount = diaryData?.total || diaryData?.list?.length || 0
-    
-    // 获取心愿列表来统计数量
+
     const wishData = await wishApi.getList()
     stats.value.wishCount = wishData?.length || 0
-    
-    // 获取已解锁成就数量
+
     const achieveData = await achievementApi.getUnlocked()
     stats.value.achieveCount = achieveData?.length || 0
   } catch (e) {
@@ -351,26 +341,27 @@ const loadStats = async () => {
   }
 }
 
-onMounted(() => {
-  userStore.fetchUserInfo()
-  loadStats()
-})
+const refreshPage = async () => {
+  await userStore.fetchUserInfo()
+  await loadStats()
+}
+
+onShow(refreshPage)
 </script>
 
 <style scoped>
 .mine-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #f5f5f5;
   padding-bottom: 120rpx;
 }
 
 .user-card {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
-  padding: 60rpx 40rpx;
+  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e9e 100%);
+  padding: 60rpx 40rpx 80rpx;
   padding-top: 120rpx;
-  padding-bottom: 80rpx;
   border-bottom-left-radius: 48rpx;
   border-bottom-right-radius: 48rpx;
 }
@@ -380,6 +371,7 @@ onMounted(() => {
   height: 120rpx;
   border-radius: 50%;
   border: 4rpx solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .user-info {
@@ -397,7 +389,7 @@ onMounted(() => {
 
 .role {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .edit-btn {
@@ -433,7 +425,7 @@ onMounted(() => {
   top: 20%;
   height: 60%;
   width: 2rpx;
-  background: #F0F0F0;
+  background: #f0f0f0;
 }
 
 .stat-num {
@@ -462,13 +454,12 @@ onMounted(() => {
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 36rpx 32rpx;
-  border-bottom: 1rpx dashed #F0F0F0;
-  transition: background-color 0.2s ease;
+  padding: 34rpx 32rpx;
+  border-bottom: 1rpx dashed #f0f0f0;
 }
 
 .menu-item:active {
-  background-color: #FFF5F7;
+  background-color: #fff5f7;
 }
 
 .menu-item:last-child {
@@ -480,15 +471,26 @@ onMounted(() => {
   margin-right: 20rpx;
 }
 
+.menu-content {
+  flex: 1;
+}
+
 .menu-text {
   flex: 1;
   font-size: 28rpx;
   color: #333;
 }
 
+.menu-subtext {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #999;
+}
+
 .menu-arrow {
   font-size: 32rpx;
-  color: #CCC;
+  color: #ccc;
 }
 
 .logout-section {
@@ -499,19 +501,15 @@ onMounted(() => {
   width: 100%;
   height: 88rpx;
   background: #fff;
-  border: 2rpx solid #FF6B9D;
+  border: 2rpx solid #ff6b9d;
   border-radius: 44rpx;
-  color: #FF6B9D;
+  color: #ff6b9d;
   font-size: 30rpx;
 }
 
-/* 弹窗样式 */
 .modal-mask {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -558,7 +556,7 @@ onMounted(() => {
 .input {
   width: 100%;
   height: 88rpx;
-  background: #F8F8F8;
+  background: #f8f8f8;
   border-radius: 16rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
@@ -588,19 +586,19 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F8F8F8;
+  background: #f8f8f8;
   border-radius: 16rpx;
   font-size: 28rpx;
   color: #666;
 }
 
 .gender-item.active {
-  background: #FFE4EC;
-  color: #FF6B9D;
+  background: #ffe4ec;
+  color: #ff6b9d;
 }
 
 .date-picker-wrapper {
-  background: #F8F8F8;
+  background: #f8f8f8;
   border-radius: 16rpx;
   padding: 0 24rpx;
   margin-bottom: 24rpx;
@@ -627,13 +625,10 @@ onMounted(() => {
   width: 100%;
   height: 88rpx;
   line-height: 88rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e9e 100%);
   border-radius: 44rpx;
   color: #fff;
   font-size: 32rpx;
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 </style>

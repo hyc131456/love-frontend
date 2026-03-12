@@ -34,11 +34,11 @@
         
         <view class="wish-footer">
           <text class="wish-date">{{ wish.targetDate || '无期限' }}</text>
-          <view v-if="wish.status === 0" class="wish-actions">
+          <view v-if="wish.status === 0" class="wish-actions" @click.stop>
             <text class="action-btn start" @click="startWish(wish)">开始</text>
             <text class="action-btn complete" @click="completeWish(wish)">完成</text>
           </view>
-          <view v-else-if="wish.status === 1" class="wish-actions">
+          <view v-else-if="wish.status === 1" class="wish-actions" @click.stop>
             <text class="action-btn complete" @click="completeWish(wish)">标记完成</text>
           </view>
           <text v-else class="completed-tag">✓ 已完成</text>

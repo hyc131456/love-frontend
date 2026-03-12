@@ -62,6 +62,12 @@ export const calendarApi = {
     getDayEvents: (date: string) =>
         get('/calendar/events/day', { date }),
 
+    getAnniversaries: () =>
+        get('/calendar/events/anniversaries'),
+
+    getUpcomingReminder: () =>
+        get('/calendar/events/upcoming-reminder'),
+
     // 添加事件
     addEvent: (data: any) => post('/calendar/event', data),
 

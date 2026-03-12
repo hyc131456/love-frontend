@@ -10,6 +10,7 @@ export interface UserInfo {
     birthday: string
     role: string
     coupleId: number | null
+    enableNotification: number
 }
 
 export interface CoupleInfo {

@@ -1,66 +1,68 @@
 <template>
   <view class="index-page">
-    <!-- 自定义导航栏 -->
-    <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
+    <view class="nav-bar" :style="{ paddingTop: `${statusBarHeight}px` }">
       <text class="nav-title">心迹</text>
     </view>
-    
-    <!-- 情侣头像区 -->
-    <view class="couple-header" :style="{ marginTop: navBarHeight + 'px' }">
+
+    <view class="couple-header" :style="{ marginTop: `${navBarHeight}px` }">
       <view class="avatars">
         <view class="avatar-wrapper">
-          <image 
-            class="avatar" 
-            :src="userInfo?.avatar || '/static/default-avatar.png'" 
-            mode="aspectFill"
-          />
+          <image class="avatar" :src="userInfo?.avatar || '/static/default-avatar.svg'" mode="aspectFill" />
           <text class="name">{{ userInfo?.nickname || '我' }}</text>
         </view>
-        
+
         <view v-if="coupleInfo?.partner" class="heart-icon">❤️</view>
-        <view v-else class="heart-icon empty">🤍</view>
-        
+        <view v-else class="heart-icon empty">💭</view>
+
         <view class="avatar-wrapper">
-          <image 
-            class="avatar" 
-            :src="coupleInfo?.partner?.avatar || '/static/default-avatar.png'" 
-            :class="{ 'grayscale': !coupleInfo?.partner }"
+          <image
+            class="avatar"
+            :class="{ grayscale: !coupleInfo?.partner }"
+            :src="coupleInfo?.partner?.avatar || '/static/default-avatar.svg'"
             mode="aspectFill"
           />
-          <text class="name">{{ coupleInfo?.partner?.nickname || '等待TA' }}</text>
+          <text class="name">{{ coupleInfo?.partner?.nickname || '等待 TA' }}</text>
         </view>
       </view>
-      
+
       <view v-if="coupleInfo?.partner" class="stats">
         <text class="level">{{ coupleInfo?.intimacyLevel }}</text>
-        <text class="days">在一起 {{ coupleInfo?.daysTogether }} 天</text>
+        <text class="days">在一起 {{ coupleInfo?.daysTogether || 0 }} 天</text>
       </view>
       <view v-else class="stats">
         <text class="level placeholder">开启一段甜蜜旅程吧</text>
       </view>
+
+      <view v-if="coupleInfo?.partner" class="anniversary-link" @click="goTo('/pages/anniversary/index')">
+        <text class="anniversary-link__icon">💖</text>
+        <text class="anniversary-link__text">查看纪念日</text>
+      </view>
     </view>
-    
-    <!-- 纪念日提醒 -->
-    <view v-if="upcomingEvent" class="reminder-card">
+
+    <view v-if="upcomingEvent" class="reminder-card" @click="goTo('/pages/anniversary/index')">
       <view class="reminder-icon">💖</view>
       <view class="reminder-content">
         <text class="reminder-title">{{ upcomingEvent.title }}</text>
         <text class="reminder-date">{{ upcomingEvent.dateText }}</text>
       </view>
+      <text class="reminder-arrow">›</text>
     </view>
-    
-    <!-- 快捷入口 -->
+
     <view class="quick-entries">
       <view class="entry" @click="goTo('/pages/calendar/index')">
         <view class="entry-icon">📅</view>
         <text class="entry-text">日历</text>
+      </view>
+      <view class="entry" @click="goTo('/pages/anniversary/index')">
+        <view class="entry-icon">💖</view>
+        <text class="entry-text">纪念日</text>
       </view>
       <view class="entry" @click="goTo('/pages/diary/edit')">
         <view class="entry-icon">📝</view>
         <text class="entry-text">日记</text>
       </view>
       <view class="entry" @click="goTo('/pages/wish/index')">
-        <view class="entry-icon">💫</view>
+        <view class="entry-icon">🎯</view>
         <text class="entry-text">心愿</text>
       </view>
       <view class="entry" @click="goTo('/pages/saving/index')">
@@ -72,26 +74,25 @@
         <text class="entry-text">菜谱</text>
       </view>
       <view class="entry" @click="goTo('/pages/achieve/index')">
-        <view class="entry-icon">🏆</view>
+        <view class="entry-icon">🏅</view>
         <text class="entry-text">成就</text>
       </view>
     </view>
-    
-    <!-- 最近动态 -->
+
     <view class="recent-section">
       <view class="section-header">
         <text class="section-title">最近动态</text>
       </view>
-      
+
       <view class="activity-list">
         <view v-for="item in activities" :key="item.id" class="activity-item">
           <view class="activity-dot"></view>
           <text class="activity-text">{{ item.content }}</text>
           <text class="activity-time">{{ item.time }}</text>
         </view>
-        
+
         <view v-if="activities.length === 0" class="empty-tip">
-          <text>暂无动态，快去记录第一个甜蜜瞬间吧~</text>
+          <text>暂时还没有动态，去记录一个新瞬间吧。</text>
         </view>
       </view>
     </view>
@@ -99,62 +100,88 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
+import { calendarApi, diaryApi } from '@/api'
 import { useUserStore } from '@/stores/user'
-import { diaryApi } from '@/api'
 
 const userStore = useUserStore()
 
-// 状态栏高度
 const statusBarHeight = ref(0)
 const navBarHeight = ref(88)
-
-// 用户信息
 const userInfo = computed(() => userStore.userInfo)
 const coupleInfo = computed(() => userStore.coupleInfo)
-
-// 即将到来的事件
 const upcomingEvent = ref<any>(null)
-
-// 最近动态
 const activities = ref<any[]>([])
 
 onMounted(() => {
-  // 获取状态栏高度
   const systemInfo = uni.getSystemInfoSync()
   statusBarHeight.value = systemInfo.statusBarHeight || 0
   navBarHeight.value = statusBarHeight.value + 44
 })
 
-onShow(async () => {
-  // 刷新用户信息
-  await userStore.fetchUserInfo()
-  
-  // 只有在已配对(有空间ID)时，才加载动态数据
-  if (userStore.userInfo?.coupleId) {
-    loadActivities()
-  } else {
-    // 否则清理历史残留数据
-    activities.value = []
-    upcomingEvent.value = null
-  }
-})
-
 const loadActivities = async () => {
   try {
     const res = await diaryApi.getList(1, 5)
-    if (res && res.list) {
-      activities.value = res.list.map((d: any) => ({
-        id: d.id,
-        content: `发布了新日记: ${d.content ? d.content.substring(0, 10) : ''}...`,
-        time: d.createdAt ? d.createdAt.substring(0, 16) : ''
+    if (res?.list) {
+      activities.value = res.list.map((item: any) => ({
+        id: item.id,
+        content: `发布了新日记：${item.content ? item.content.substring(0, 12) : '记录生活'}...`,
+        time: item.createdAt ? item.createdAt.substring(0, 16) : ''
       }))
+      return
     }
-  } catch (e) { console.error('获取动态失败', e) }
+  } catch (e) {
+    console.error('获取动态失败', e)
+  }
+
+  activities.value = []
 }
 
-// tabBar 页面列表
+const buildReminderDateText = (item: any) => {
+  const daysUntil = Number(item?.daysUntil ?? -1)
+  const nextOccurrence = item?.nextOccurrence || ''
+  if (daysUntil === 0) {
+    return '今天就是纪念日'
+  }
+  if (daysUntil === 1) {
+    return `明天 · ${nextOccurrence}`
+  }
+  if (daysUntil > 1) {
+    return `还有 ${daysUntil} 天 · ${nextOccurrence}`
+  }
+  return nextOccurrence
+}
+
+const loadUpcomingReminder = async () => {
+  try {
+    const data = await calendarApi.getUpcomingReminder()
+    if (data) {
+      upcomingEvent.value = {
+        ...data,
+        dateText: buildReminderDateText(data)
+      }
+      return
+    }
+  } catch (e) {
+    console.error('获取纪念日提醒失败', e)
+  }
+
+  upcomingEvent.value = null
+}
+
+onShow(async () => {
+  await userStore.fetchUserInfo()
+
+  if (userStore.userInfo?.coupleId) {
+    await Promise.all([loadActivities(), loadUpcomingReminder()])
+    return
+  }
+
+  activities.value = []
+  upcomingEvent.value = null
+})
+
 const tabBarPages = [
   '/pages/index/index',
   '/pages/calendar/index',
@@ -163,9 +190,7 @@ const tabBarPages = [
   '/pages/mine/index'
 ]
 
-// 页面跳转
 const goTo = (url: string) => {
-  // 检查目标页面是否是 tabBar 页面
   const isTabBarPage = tabBarPages.some(page => url.startsWith(page))
   if (isTabBarPage) {
     uni.switchTab({ url })
@@ -178,7 +203,8 @@ const goTo = (url: string) => {
 <style scoped>
 .index-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #FFE4EC 0%, #FFF9FA 30%);
+  background: linear-gradient(180deg, #ffe4ec 0%, #fff9fa 30%);
+  padding-bottom: 40rpx;
 }
 
 .nav-bar {
@@ -224,7 +250,6 @@ const goTo = (url: string) => {
   border-radius: 50%;
   border: 6rpx solid #fff;
   box-shadow: 0 12rpx 32rpx rgba(255, 107, 157, 0.25);
-  transition: all 0.3s ease;
   background: #fff;
 }
 
@@ -253,8 +278,14 @@ const goTo = (url: string) => {
 }
 
 @keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
 }
 
 .stats {
@@ -265,7 +296,7 @@ const goTo = (url: string) => {
 
 .level {
   font-size: 28rpx;
-  color: #FF6B9D;
+  color: #ff6b9d;
   margin-bottom: 8rpx;
 }
 
@@ -280,10 +311,32 @@ const goTo = (url: string) => {
   color: #333;
 }
 
+.anniversary-link {
+  margin-top: 22rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 26rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 10rpx 26rpx rgba(255, 107, 157, 0.12);
+}
+
+.anniversary-link__icon {
+  font-size: 24rpx;
+  margin-right: 10rpx;
+}
+
+.anniversary-link__text {
+  font-size: 24rpx;
+  color: #ff6b9d;
+  font-weight: 600;
+}
+
 .reminder-card {
   margin: 0 32rpx 32rpx;
   padding: 36rpx 32rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e9e 100%);
   border-radius: 32rpx;
   display: flex;
   align-items: center;
@@ -309,6 +362,11 @@ const goTo = (url: string) => {
 
 .reminder-date {
   font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.reminder-arrow {
+  font-size: 44rpx;
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -330,18 +388,15 @@ const goTo = (url: string) => {
   margin: 12rpx;
   border-radius: 32rpx;
   box-shadow: 0 16rpx 48rpx rgba(255, 107, 157, 0.08);
-  transition: all 0.2s ease;
 }
 
 .entry:active {
-  transform: scale(0.95);
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.05);
+  transform: scale(0.96);
 }
 
 .entry-icon {
   font-size: 56rpx;
   margin-bottom: 16rpx;
-  filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.1));
 }
 
 .entry-text {
@@ -375,7 +430,7 @@ const goTo = (url: string) => {
   display: flex;
   align-items: center;
   padding: 24rpx 0;
-  border-bottom: 1rpx dashed #F0F0F0;
+  border-bottom: 1rpx dashed #f0f0f0;
 }
 
 .activity-item:last-child {
@@ -385,7 +440,7 @@ const goTo = (url: string) => {
 .activity-dot {
   width: 12rpx;
   height: 12rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e9e 100%);
   border-radius: 50%;
   margin-right: 20rpx;
   box-shadow: 0 2rpx 8rpx rgba(255, 107, 157, 0.4);
