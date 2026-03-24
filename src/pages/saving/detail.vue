@@ -285,7 +285,10 @@ onLoad((options: any) => {
 .btn-primary {
   width: 100%;
   height: 88rpx;
-  line-height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   background: linear-gradient(135deg, #FF6B9D, #FF8E9E);
   border-radius: 44rpx;
   color: #fff;
