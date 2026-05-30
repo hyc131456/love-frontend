@@ -4,7 +4,7 @@
     <view v-if="diary" class="diary-detail">
       <!-- 作者信息 -->
       <view class="diary-header">
-        <image class="author-avatar" :src="diary.author?.avatar || '/static/default-avatar.png'" />
+        <image class="author-avatar" :src="diary.author?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
         <view class="author-info">
           <text class="author-name">{{ diary.author?.nickname || '匿名' }}</text>
           <text class="diary-time">{{ formatTime(diary.createdAt) }}</text>
@@ -23,7 +23,7 @@
           :key="index"
           class="diary-image"
           :class="{ 'single': diary.images.length === 1 }"
-          :src="img.url"
+          :src="img.thumbUrl || img.url"
           mode="aspectFill"
           @click="previewImage(diary.images, index)"
         />
@@ -41,7 +41,7 @@
       
       <!-- 互动区域 -->
       <view class="diary-actions">
-        <view class="action-item" @click="toggleLike">
+        <view class="action-item" :class="{ liked: diary.isLiked }" @click="toggleLike">
           <text class="action-icon">{{ diary.isLiked ? '❤️' : '🤍' }}</text>
           <text>{{ diary.likeCount || 0 }}</text>
         </view>
@@ -55,7 +55,7 @@
       <view v-if="diary.comments?.length" class="comments-section">
         <text class="section-title">评论</text>
         <view v-for="comment in diary.comments" :key="comment.id" class="comment-item">
-          <image class="comment-avatar" :src="comment.author?.avatar || '/static/default-avatar.png'" />
+          <image class="comment-avatar" :src="comment.author?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
           <view class="comment-content">
             <text class="comment-author">{{ comment.author?.nickname || '匿名' }}</text>
             <text class="comment-text">{{ comment.content }}</text>
@@ -204,113 +204,169 @@ const editDiary = () => {
 .detail-page {
   min-height: 100vh;
   background: #F7F5F3;
-  padding-bottom: 140rpx;
+  color: #1C1B2E;
+  padding-bottom: 164rpx;
+}
+
+.detail-page :deep(.app-nav) {
+  background: #FFFFFF;
+  border-bottom: 1rpx solid #EBEBF0;
+  box-shadow: none;
+}
+
+.detail-page :deep(.app-nav__title) {
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.detail-page button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  line-height: 1;
+}
+
+.detail-page button::after {
+  border: none;
 }
 
 .diary-detail {
-  padding: 40rpx 32rpx;
-  background: #fff;
-  border-radius: 32rpx;
-  margin: 24rpx;
+  margin: 24rpx 32rpx;
+  padding: 32rpx;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  border-radius: 28rpx;
   border: 1rpx solid #EBEBF0;
-  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
+  box-shadow: 0 6rpx 22rpx rgba(28, 27, 46, 0.06);
 }
 
 .diary-header {
   display: flex;
   align-items: center;
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
 }
 
 .author-avatar {
-  width: 96rpx;
-  height: 96rpx;
+  width: 80rpx;
+  height: 80rpx;
   border-radius: 50%;
-  margin-right: 24rpx;
+  margin-right: 20rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #FFFFFF;
+  box-shadow: 0 3rpx 10rpx rgba(28, 27, 46, 0.08);
 }
 
 .author-info {
   flex: 1;
+  min-width: 0;
 }
 
 .author-name {
   display: block;
-  font-size: 32rpx;
-  font-weight: 500;
+  font-size: 30rpx;
+  line-height: 38rpx;
+  font-weight: 700;
   color: #1C1B2E;
-  margin-bottom: 8rpx;
+  margin-bottom: 4rpx;
 }
 
 .diary-time {
-  font-size: 26rpx;
+  font-size: 24rpx;
+  line-height: 32rpx;
   color: #8A8A9A;
 }
 
 .mood-icon {
-  font-size: 48rpx;
+  flex-shrink: 0;
+  font-size: 46rpx;
+  line-height: 52rpx;
+  filter: drop-shadow(0 4rpx 8rpx rgba(28, 27, 46, 0.10));
 }
 
 .edit-btn {
   margin-left: 16rpx;
-  padding: 8rpx 20rpx;
+  padding: 8rpx 18rpx;
   background: #FEF0F2;
-  border-radius: 20rpx;
+  border-radius: 999rpx;
   font-size: 24rpx;
+  line-height: 30rpx;
+  font-weight: 600;
   color: #E8637A;
 }
 
 .diary-content {
   display: block;
-  font-size: 32rpx;
+  font-size: 30rpx;
   color: #1C1B2E;
-  line-height: 1.8;
-  margin-bottom: 32rpx;
+  line-height: 50rpx;
+  margin-bottom: 24rpx;
 }
 
 .diary-images {
   display: flex;
   flex-wrap: wrap;
-  gap: 16rpx;
-  margin-bottom: 32rpx;
+  gap: 10rpx;
+  margin-bottom: 24rpx;
 }
 
 .diary-image {
-  width: calc(33.33% - 12rpx);
+  width: calc((100% - 20rpx) / 3);
   aspect-ratio: 1;
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  border-radius: 16rpx;
+  background: #F7F5F3;
+  box-shadow: none;
 }
 
 .diary-image.single {
   width: 100%;
-  aspect-ratio: 16/9;
-  border-radius: 24rpx;
+  aspect-ratio: 1;
+  border-radius: 20rpx;
 }
 
 .diary-location,
 .diary-weather {
-  font-size: 28rpx;
-  color: #5B5A6D;
-  margin-bottom: 16rpx;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  margin-right: 12rpx;
+  margin-bottom: 18rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: #F7F5F3;
+  color: #8A8A9A;
+  font-size: 24rpx;
+  line-height: 32rpx;
 }
 
 .diary-actions {
   display: flex;
-  border-top: 1rpx dashed #EBEBF0;
-  border-bottom: 1rpx dashed #EBEBF0;
-  padding: 24rpx 0;
-  margin-bottom: 40rpx;
+  align-items: center;
+  gap: 28rpx;
+  border-top: 1rpx solid #F0F0F4;
+  border-bottom: 1rpx solid #F0F0F4;
+  padding: 20rpx 0;
+  margin: 6rpx 0 32rpx;
 }
 
 .action-item {
   display: flex;
   align-items: center;
-  margin-right: 48rpx;
-  font-size: 28rpx;
-  color: #5B5A6D;
-  padding: 8rpx 20rpx;
-  border-radius: 32rpx;
+  justify-content: center;
+  min-width: 80rpx;
+  height: 44rpx;
+  padding: 0 12rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  line-height: 1;
+  color: #8A8A9A;
   transition: all 0.2s;
+}
+
+.action-item.liked {
+  color: #E8637A;
 }
 
 .action-item:active {
@@ -319,54 +375,59 @@ const editDiary = () => {
 }
 
 .action-icon {
-  margin-right: 12rpx;
-  font-size: 32rpx;
+  margin-right: 8rpx;
+  font-size: 26rpx;
 }
 
 .comments-section {
-  margin-top: 32rpx;
+  margin-top: 0;
 }
 
 .section-title {
   display: block;
-  font-size: 30rpx;
-  font-weight: 500;
+  font-size: 28rpx;
+  line-height: 36rpx;
+  font-weight: 700;
   color: #1C1B2E;
-  margin-bottom: 24rpx;
+  margin-bottom: 20rpx;
 }
 
 .comment-item {
   display: flex;
-  margin-bottom: 24rpx;
+  margin-bottom: 18rpx;
 }
 
 .comment-avatar {
-  width: 64rpx;
-  height: 64rpx;
+  width: 58rpx;
+  height: 58rpx;
+  flex-shrink: 0;
   border-radius: 50%;
-  margin-right: 20rpx;
+  margin-right: 16rpx;
+  background: #F7F5F3;
 }
 
 .comment-content {
   flex: 1;
+  min-width: 0;
   background: #F7F5F3;
-  padding: 24rpx;
-  border-radius: 24rpx;
-  border-top-left-radius: 8rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 20rpx;
+  border-top-left-radius: 10rpx;
 }
 
 .comment-author {
   display: block;
-  font-size: 26rpx;
-  font-weight: 500;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  font-weight: 700;
   color: #1C1B2E;
-  margin-bottom: 8rpx;
+  margin-bottom: 4rpx;
 }
 
 .comment-text {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: #5B5A6D;
-  line-height: 1.5;
+  line-height: 40rpx;
 }
 
 .footer {
@@ -376,43 +437,49 @@ const editDiary = () => {
   right: 0;
   display: flex;
   align-items: center;
-  padding: 24rpx 32rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  gap: 18rpx;
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
   border-top: 1rpx solid #EBEBF0;
-  box-shadow: 0 -8rpx 32rpx rgba(28, 27, 46, 0.06);
+  box-shadow: 0 -6rpx 24rpx rgba(28, 27, 46, 0.05);
 }
 
 .comment-input {
   flex: 1;
-  height: 80rpx;
+  min-width: 0;
+  height: 76rpx;
+  padding: 0 28rpx;
+  box-sizing: border-box;
   background: #F7F5F3;
-  border-radius: 40rpx;
-  padding: 0 40rpx;
-  font-size: 28rpx;
-  border: 2rpx solid transparent;
+  border: 1rpx solid #EBEBF0;
+  border-radius: 999rpx;
+  color: #1C1B2E;
+  font-size: 26rpx;
   transition: all 0.2s;
 }
 
 .comment-input:focus {
-  background: #fff;
+  background: #FFFFFF;
   border-color: #E8637A;
-  box-shadow: 0 0 0 6rpx rgba(232, 99, 122, 0.12);
+  box-shadow: 0 0 0 5rpx rgba(232, 99, 122, 0.10);
 }
 
 .btn-send {
-  margin-left: 24rpx;
-  padding: 0 40rpx;
-  height: 80rpx;
-  line-height: 80rpx;
-  background: #E8637A;
-  border-radius: 40rpx;
-  color: #fff;
-  font-size: 30rpx;
-  font-weight: 500;
-  border: none;
-  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
+  width: 116rpx;
+  height: 76rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  background: #E8637A !important;
+  color: #FFFFFF !important;
+  font-size: 26rpx;
+  line-height: 1;
+  font-weight: 700;
+  box-shadow: 0 8rpx 24rpx rgba(232, 99, 122, 0.24);
   transition: all 0.2s;
 }
 
@@ -422,6 +489,7 @@ const editDiary = () => {
 
 .btn-send[disabled] {
   opacity: 0.5;
+  box-shadow: none;
 }
 </style>
 

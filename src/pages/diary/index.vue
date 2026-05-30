@@ -20,7 +20,7 @@
     >
       <view v-for="diary in filteredDiaries" :key="diary.id" class="diary-card" @click="viewDiary(diary)">
         <view class="diary-header">
-          <image class="author-avatar" :src="diary.author?.avatar || '/static/default-avatar.png'" />
+          <image class="author-avatar" :src="diary.author?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
           <view class="author-info">
             <text class="author-name">{{ diary.author?.nickname || '匿名' }}</text>
             <text class="diary-time">{{ formatTime(diary.createdAt) }}</text>
@@ -39,7 +39,7 @@
             :class="{ 'single': diary.images.length === 1 }"
             :src="img.thumbUrl || img.url"
             mode="aspectFill"
-            @click="previewImage(diary.images, index)"
+            @click.stop="previewImage(diary.images, index)"
           />
         </view>
         
@@ -48,11 +48,11 @@
         </view>
         
         <view class="diary-actions">
-          <view class="action-item" @click="toggleLike(diary)">
+          <view class="action-item" :class="{ liked: diary.isLiked }" @click.stop="toggleLike(diary)">
             <text class="action-icon">{{ diary.isLiked ? '❤️' : '🤍' }}</text>
             <text>{{ diary.likeCount || 0 }}</text>
           </view>
-          <view class="action-item" @click="showComment(diary)">
+          <view class="action-item" @click.stop="showComment(diary)">
             <text class="action-icon">💬</text>
             <text>{{ diary.commentCount || 0 }}</text>
           </view>
@@ -233,22 +233,68 @@ onShow(async () => {
 .diary-page {
   min-height: 100vh;
   background: #F7F5F3;
-  padding-bottom: 164rpx;
+  color: #1C1B2E;
+  padding-bottom: 180rpx;
+}
+
+.diary-page :deep(.app-nav) {
+  background: #FFFFFF;
+  border-bottom: 1rpx solid #EBEBF0;
+  box-shadow: none;
+}
+
+.diary-page :deep(.app-nav__title) {
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.diary-page :deep(.segment-tabs) {
+  margin: 0 32rpx;
+  padding: 8rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 6rpx 20rpx rgba(28, 27, 46, 0.05);
+}
+
+.diary-page :deep(.segment-tabs__item) {
+  height: 64rpx;
+  padding: 0 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  line-height: 1;
+}
+
+.diary-page :deep(.segment-tabs__item--active) {
+  background: #FEF0F2;
+  color: #E8637A;
+  font-weight: 700;
+}
+
+.diary-page :deep(.app-fab) {
+  right: 32rpx;
+  bottom: 178rpx;
+  width: 104rpx;
+  height: 104rpx;
+  box-shadow: 0 10rpx 32rpx rgba(232, 99, 122, 0.34);
 }
 
 .couple-strip {
   display: flex;
   align-items: center;
-  margin: 24rpx 32rpx 20rpx;
+  margin: 24rpx 32rpx 22rpx;
   padding: 28rpx 30rpx;
   border-radius: 28rpx;
   background: #FFFFFF;
   border: 1rpx solid #EBEBF0;
-  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.05);
+  box-shadow: 0 8rpx 24rpx rgba(28, 27, 46, 0.06);
 }
 
 .avatar-group {
-  width: 116rpx;
+  width: 112rpx;
   display: flex;
   align-items: center;
 }
@@ -259,7 +305,7 @@ onShow(async () => {
   border-radius: 50%;
   border: 4rpx solid #FFFFFF;
   background: #F7F5F3;
-  box-shadow: 0 4rpx 12rpx rgba(28, 27, 46, 0.08);
+  box-shadow: 0 4rpx 12rpx rgba(28, 27, 46, 0.10);
 }
 
 .strip-avatar--second {
@@ -275,7 +321,7 @@ onShow(async () => {
   display: block;
   font-size: 32rpx;
   line-height: 40rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: #1C1B2E;
 }
 
@@ -287,17 +333,18 @@ onShow(async () => {
 }
 
 .diary-list {
-  height: calc(100vh - 230rpx);
-  margin-top: 20rpx;
+  height: calc(100vh - 330rpx);
+  margin-top: 22rpx;
+  box-sizing: border-box;
 }
 
 .diary-card {
   background: #FFFFFF;
-  margin: 24rpx 32rpx;
-  border-radius: 28rpx;
-  padding: 30rpx 32rpx;
+  margin: 0 32rpx 28rpx;
+  border-radius: 26rpx;
+  padding: 30rpx 32rpx 26rpx;
   border: 1rpx solid #EBEBF0;
-  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
+  box-shadow: 0 6rpx 22rpx rgba(28, 27, 46, 0.06);
   transition: all 0.2s ease;
 }
 
@@ -309,86 +356,113 @@ onShow(async () => {
 .diary-header {
   display: flex;
   align-items: center;
-  margin-bottom: 24rpx;
+  margin-bottom: 22rpx;
 }
 
 .author-avatar {
-  width: 80rpx;
-  height: 80rpx;
+  width: 76rpx;
+  height: 76rpx;
   border-radius: 50%;
-  margin-right: 20rpx;
+  margin-right: 18rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #FFFFFF;
+  box-shadow: 0 3rpx 10rpx rgba(28, 27, 46, 0.08);
 }
 
 .author-info {
   flex: 1;
+  min-width: 0;
 }
 
 .author-name {
   display: block;
   font-size: 30rpx;
-  font-weight: 600;
+  line-height: 38rpx;
+  font-weight: 700;
   color: #1C1B2E;
-  margin-bottom: 8rpx;
+  margin-bottom: 4rpx;
 }
 
 .diary-time {
   font-size: 24rpx;
+  line-height: 32rpx;
   color: #8A8A9A;
 }
 
 .mood-icon {
-  font-size: 48rpx;
-  filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.1));
+  flex-shrink: 0;
+  font-size: 46rpx;
+  line-height: 52rpx;
+  filter: drop-shadow(0 4rpx 8rpx rgba(28, 27, 46, 0.10));
 }
 
 .diary-content {
+  display: block;
   font-size: 28rpx;
   color: #1C1B2E;
-  line-height: 1.6;
-  margin-bottom: 24rpx;
+  line-height: 44rpx;
+  margin-bottom: 20rpx;
 }
 
 .diary-images {
   display: flex;
   flex-wrap: wrap;
-  gap: 16rpx;
-  margin-bottom: 24rpx;
+  gap: 10rpx;
+  margin-bottom: 20rpx;
 }
 
 .diary-image {
-  width: calc(33.33% - 12rpx);
+  width: calc((100% - 20rpx) / 3);
   aspect-ratio: 1;
   border-radius: 16rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  background: #F7F5F3;
+  box-shadow: none;
 }
 
 .diary-image.single {
-  width: 70%;
-  aspect-ratio: 4/3;
-  border-radius: 24rpx;
+  width: 72%;
+  max-width: 430rpx;
+  aspect-ratio: 1;
+  border-radius: 18rpx;
 }
 
 .diary-location {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: #F7F5F3;
   font-size: 24rpx;
+  line-height: 32rpx;
   color: #8A8A9A;
-  margin-bottom: 24rpx;
+  margin-bottom: 20rpx;
 }
 
 .diary-actions {
   display: flex;
-  border-top: 1rpx dashed #F0F0F0;
-  padding-top: 24rpx;
+  align-items: center;
+  gap: 28rpx;
+  border-top: 1rpx solid #F0F0F4;
+  padding-top: 20rpx;
 }
 
 .action-item {
   display: flex;
   align-items: center;
-  margin-right: 48rpx;
-  font-size: 28rpx;
-  color: #5B5A6D;
-  padding: 8rpx 16rpx;
-  border-radius: 32rpx;
+  justify-content: center;
+  min-width: 80rpx;
+  height: 44rpx;
+  padding: 0 12rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  line-height: 1;
+  color: #8A8A9A;
   transition: background-color 0.2s;
+}
+
+.action-item.liked {
+  color: #E8637A;
 }
 
 .action-item:active {
@@ -396,23 +470,25 @@ onShow(async () => {
 }
 
 .action-icon {
-  margin-right: 12rpx;
-  font-size: 32rpx;
+  margin-right: 8rpx;
+  font-size: 26rpx;
 }
 
 .loading-tip {
   text-align: center;
-  padding: 32rpx;
+  padding: 24rpx 32rpx 44rpx;
   color: #8A8A9A;
   font-size: 26rpx;
 }
 
 .edit-btn {
   margin-left: 16rpx;
-  padding: 8rpx 20rpx;
+  padding: 8rpx 18rpx;
   background: #FEF0F2;
-  border-radius: 20rpx;
+  border-radius: 999rpx;
   font-size: 24rpx;
+  line-height: 30rpx;
+  font-weight: 600;
   color: #E8637A;
 }
 </style>
