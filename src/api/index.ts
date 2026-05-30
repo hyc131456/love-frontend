@@ -131,8 +131,12 @@ export const savingApi = {
     getList: () => get('/saving/list'),
     getDetail: (id: number) => get(`/saving/${id}`),
     create: (data: any) => post('/saving', data),
-    deposit: (id: number, amount: number, note?: string) =>
-        post(`/saving/${id}/deposit?amount=${amount}${note ? '&note=' + note : ''}`),
+    deposit: (id: number, amount: number, note?: string, depositorRole?: string) => {
+        const params = [`amount=${amount}`]
+        if (note) params.push(`note=${encodeURIComponent(note)}`)
+        if (depositorRole) params.push(`depositorRole=${encodeURIComponent(depositorRole)}`)
+        return post(`/saving/${id}/deposit?${params.join('&')}`)
+    },
     complete: (id: number) => post(`/saving/${id}/complete`)
 }
 
