@@ -1,5 +1,7 @@
-<template>
+﻿<template>
   <view class="recipe-edit-page">
+    <AppNavBar :title="isEdit ? '编辑菜谱' : '新建菜谱'" back />
+
     <view class="form-section">
       <!-- 封面图 -->
       <view class="cover-section" @click="chooseCover">
@@ -83,11 +85,12 @@
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { recipeApi, uploadApi } from '@/api'
+import AppNavBar from '@/components/AppNavBar.vue'
 
 const categories = [
   { value: 'staple', label: '主食', icon: '🍚' },
   { value: 'cold', label: '凉菜', icon: '🥗' },
-  { value: 'soup', label: '汤羹', icon: '🍲' },
+  { value: 'soup', label: '汤羹', icon: '🥣' },
   { value: 'dessert', label: '甜品', icon: '🍰' },
   { value: 'drink', label: '饮品', icon: '🥤' }
 ]
@@ -196,16 +199,18 @@ onLoad(async (options: any) => {
 <style scoped>
 .recipe-edit-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #F7F5F3;
   padding: 24rpx;
   padding-bottom: 120rpx;
 }
 
 .form-section {
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 32rpx;
   padding: 32rpx;
   margin-bottom: 24rpx;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .cover-section {
@@ -222,23 +227,24 @@ onLoad(async (options: any) => {
 .cover-placeholder {
   width: 100%;
   height: 200rpx;
-  background: #F8F8F8;
+  background: #F7F5F3;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   border-radius: 16rpx;
-  border: 2rpx dashed #DDD;
+  border: 2rpx dashed #D8D6DE;
 }
 
 .cover-icon { font-size: 48rpx; margin-bottom: 8rpx; }
-.cover-text { font-size: 26rpx; color: #999; }
+.cover-text { font-size: 26rpx; color: #8A8A9A; }
 
 .input {
   width: 100%;
   height: 88rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
   margin-bottom: 20rpx;
@@ -252,7 +258,7 @@ onLoad(async (options: any) => {
 .field-label {
   display: block;
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 12rpx;
   font-weight: 500;
 }
@@ -265,15 +271,15 @@ onLoad(async (options: any) => {
 
 .type-item {
   padding: 12rpx 24rpx;
-  background: #F5F5F5;
+  background: #F7F5F3;
   border-radius: 28rpx;
   font-size: 24rpx;
-  color: #666;
+  color: #5B5A6D;
 }
 
 .type-item.active {
-  background: #FFE4EC;
-  color: #FF6B9D;
+  background: #FEF0F2;
+  color: #E8637A;
 }
 
 .list-section {
@@ -284,7 +290,7 @@ onLoad(async (options: any) => {
   display: block;
   font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 16rpx;
 }
 
@@ -298,8 +304,9 @@ onLoad(async (options: any) => {
 .input-sm {
   flex: 1;
   height: 72rpx;
-  background: #F8F8F8;
-  border-radius: 12rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 18rpx;
   padding: 0 20rpx;
   font-size: 26rpx;
   box-sizing: border-box;
@@ -321,7 +328,7 @@ onLoad(async (options: any) => {
 .step-num {
   width: 44rpx;
   height: 44rpx;
-  background: #FF6B9D;
+  background: #E8637A;
   color: #fff;
   font-size: 24rpx;
   border-radius: 50%;
@@ -335,8 +342,9 @@ onLoad(async (options: any) => {
 .step-input {
   flex: 1;
   min-height: 80rpx;
-  background: #F8F8F8;
-  border-radius: 12rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 18rpx;
   padding: 16rpx 20rpx;
   font-size: 26rpx;
   box-sizing: border-box;
@@ -344,18 +352,19 @@ onLoad(async (options: any) => {
 
 .add-item-btn {
   text-align: center;
-  color: #FF6B9D;
+  color: #E8637A;
   font-size: 28rpx;
   padding: 20rpx;
-  background: #FFF5F7;
+  background: #FEF0F2;
   border-radius: 12rpx;
 }
 
 .textarea {
   width: 100%;
   min-height: 120rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 20rpx 24rpx;
   font-size: 28rpx;
   box-sizing: border-box;
@@ -365,10 +374,12 @@ onLoad(async (options: any) => {
   width: 100%;
   height: 88rpx;
   line-height: 88rpx;
-  background: linear-gradient(135deg, #FF6B9D, #FF8E9E);
+  background: #E8637A;
   border-radius: 44rpx;
   color: #fff;
   font-size: 32rpx;
   border: none;
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
 }
 </style>
+

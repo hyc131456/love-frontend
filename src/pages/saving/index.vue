@@ -1,6 +1,7 @@
 <template>
   <view class="saving-page">
-    <!-- 储蓄列表 -->
+    <AppNavBar title="共同储蓄" back />
+
     <view class="saving-list">
       <view v-for="item in savingList" :key="item.id" class="saving-card" @click="goDetail(item.id)">
         <view class="saving-header">
@@ -33,23 +34,13 @@
         </view>
       </view>
       
-      <view v-if="savingList.length === 0" class="empty-state">
-        <text class="empty-icon">🐷</text>
-        <text class="empty-text">还没有储蓄目标</text>
-        <text class="empty-tip">一起攒钱实现梦想吧~</text>
-      </view>
+      <EmptyState v-if="savingList.length === 0" icon="¥" title="还没有储蓄目标" desc="一起攒钱实现梦想吧。" />
     </view>
     
-    <!-- 添加按钮 -->
-    <view class="fab-btn" @click="showAddModal = true">
-      <text>+</text>
-    </view>
+    <AppFab icon="+" @click="showAddModal = true" />
     
-    <!-- 添加弹窗 -->
-    <view v-if="showAddModal" class="modal-mask" @click="showAddModal = false">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">新建储蓄目标</text>
-        
+    <AppSheet :open="showAddModal" title="新建储蓄目标" @close="showAddModal = false">
+      <scroll-view scroll-y class="sheet-scroll">
         <input v-model="newSaving.name" class="input" placeholder="目标名称" />
         
         <input v-model="newSaving.targetAmount" class="input" placeholder="目标金额" type="digit" />
@@ -76,10 +67,9 @@
             </view>
           </picker>
         </view>
-        
-        <button class="btn-primary" @click="createSaving">开始储蓄</button>
-      </view>
-    </view>
+      </scroll-view>
+      <button class="btn-primary" @click="createSaving">开始储蓄</button>
+    </AppSheet>
   </view>
 </template>
 
@@ -87,6 +77,10 @@
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { savingApi } from '@/api'
+import AppFab from '@/components/AppFab.vue'
+import AppNavBar from '@/components/AppNavBar.vue'
+import AppSheet from '@/components/AppSheet.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const icons = ['✈️', '💍', '🏠', '🎁', '🎓', '💰', '🌴', '🚗']
 
@@ -161,20 +155,21 @@ onShow(() => {
 <style scoped>
 .saving-page {
   min-height: 100vh;
-  background: #F5F5F5;
-  padding-bottom: 120rpx;
+  background: #F7F5F3;
+  padding-bottom: 140rpx;
 }
 
 .saving-list {
-  padding: 24rpx;
+  padding: 24rpx 32rpx;
 }
 
 .saving-card {
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 28rpx;
   padding: 32rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .saving-header {
@@ -196,13 +191,13 @@ onShow(() => {
   display: block;
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 4rpx;
 }
 
 .saving-deadline {
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .completed-tag {
@@ -212,7 +207,7 @@ onShow(() => {
 
 .progress-bar {
   height: 16rpx;
-  background: #F0F0F0;
+  background: #EBEBF0;
   border-radius: 8rpx;
   overflow: hidden;
   margin-bottom: 12rpx;
@@ -220,7 +215,7 @@ onShow(() => {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #FF6B9D, #FF8E9E);
+  background: linear-gradient(90deg, #E8637A, #9B8EC4);
   border-radius: 8rpx;
   transition: width 0.3s;
 }
@@ -234,18 +229,18 @@ onShow(() => {
 .amount {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .percent {
   font-size: 28rpx;
-  color: #FF6B9D;
+  color: #E8637A;
   font-weight: 600;
 }
 
 .contribution {
   padding-top: 16rpx;
-  border-top: 1rpx solid #F5F5F5;
+  border-top: 1rpx solid #EBEBF0;
 }
 
 .contrib-bar {
@@ -269,80 +264,19 @@ onShow(() => {
 
 .contrib-label {
   font-size: 22rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
-}
-
-.empty-icon {
-  font-size: 100rpx;
-  margin-bottom: 24rpx;
-}
-
-.empty-text {
-  font-size: 32rpx;
-  color: #333;
-  margin-bottom: 16rpx;
-}
-
-.empty-tip {
-  font-size: 26rpx;
-  color: #999;
-}
-
-.fab-btn {
-  position: fixed;
-  right: 40rpx;
-  bottom: 200rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #FF6B9D, #FF8E9E);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48rpx;
-  color: #fff;
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.4);
-}
-
-.modal-mask {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-}
-
-.modal-content {
-  width: 85%;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 48rpx;
-  box-sizing: border-box;
-}
-
-.modal-title {
-  display: block;
-  font-size: 34rpx;
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 32rpx;
-  color: #333;
+.sheet-scroll {
+  max-height: 58vh;
 }
 
 .input {
   width: 100%;
   height: 88rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
   margin-bottom: 24rpx;
@@ -362,14 +296,14 @@ onShow(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F5F5F5;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border-radius: 20rpx;
   font-size: 36rpx;
 }
 
 .icon-item.active {
-  background: #FFE4EC;
-  box-shadow: 0 0 0 2rpx #FF6B9D;
+  background: #FEF0F2;
+  box-shadow: 0 0 0 2rpx #E8637A;
 }
 
 .date-picker-section {
@@ -381,18 +315,19 @@ onShow(() => {
   justify-content: space-between;
   align-items: center;
   padding: 24rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
 }
 
 .date-label {
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .date-value {
   font-size: 28rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .btn-primary {
@@ -402,7 +337,7 @@ onShow(() => {
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: #E8637A;
   border-radius: 44rpx;
   color: #fff;
   font-size: 32rpx;

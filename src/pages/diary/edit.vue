@@ -1,5 +1,7 @@
-<template>
+﻿<template>
   <view class="edit-page">
+    <AppNavBar :title="isEditMode ? '编辑日记' : '写日记'" back />
+
     <!-- 内容输入 -->
     <textarea 
       v-model="content"
@@ -63,8 +65,8 @@
       
       <!-- 公开设置 -->
       <view class="option-row">
-        <text class="option-label">对TA可见</text>
-        <switch :checked="isPublic" @change="isPublic = !isPublic" color="#FF6B9D" />
+        <text class="option-label">对 TA 可见</text>
+        <switch :checked="isPublic" @change="isPublic = !isPublic" color="#E8637A" />
       </view>
     </view>
     
@@ -81,6 +83,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { diaryApi, uploadApi } from '@/api'
+import AppNavBar from '@/components/AppNavBar.vue'
 
 const moods = [
   { value: 'happy', icon: '😊' },
@@ -248,7 +251,7 @@ const publish = async () => {
 <style scoped>
 .edit-page {
   min-height: 100vh;
-  background: #fff;
+  background: #F7F5F3;
   padding: 32rpx;
   padding-bottom: 180rpx;
 }
@@ -256,9 +259,14 @@ const publish = async () => {
 .content-input {
   width: 100%;
   min-height: 300rpx;
+  padding: 32rpx;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  border-radius: 32rpx;
   font-size: 30rpx;
   line-height: 1.6;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .images-section {
@@ -299,9 +307,9 @@ const publish = async () => {
 .add-image {
   width: calc(33.33% - 12rpx);
   aspect-ratio: 1;
-  background: #F8F8F8;
-  border: 2rpx dashed #DDD;
-  border-radius: 12rpx;
+  background: #F7F5F3;
+  border: 2rpx dashed #D8D6DE;
+  border-radius: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -310,16 +318,18 @@ const publish = async () => {
 }
 
 .options-section {
-  background: #F8F8F8;
-  border-radius: 24rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  border-radius: 32rpx;
   padding: 16rpx 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.05);
 }
 
 .option-row {
   display: flex;
   align-items: center;
   padding: 24rpx 0;
-  border-bottom: 1rpx solid #EEE;
+  border-bottom: 1rpx solid #EBEBF0;
 }
 
 .option-row:last-child {
@@ -329,7 +339,7 @@ const publish = async () => {
 .option-label {
   width: 140rpx;
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
 }
 
 .mood-list, .weather-list {
@@ -350,14 +360,14 @@ const publish = async () => {
 }
 
 .mood-item.active, .weather-item.active {
-  background: #FFE4EC;
-  box-shadow: 0 0 0 4rpx #FF6B9D;
+  background: #FEF0F2;
+  box-shadow: 0 0 0 4rpx #E8637A;
 }
 
 .option-value {
   flex: 1;
   font-size: 28rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .arrow {
@@ -373,17 +383,20 @@ const publish = async () => {
   padding: 24rpx 32rpx;
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   background: #fff;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border-top: 1rpx solid #EBEBF0;
+  box-shadow: 0 -8rpx 32rpx rgba(28, 27, 46, 0.06);
 }
 
 .btn-publish {
   width: 100%;
   height: 96rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: #E8637A;
   border-radius: 48rpx;
   color: #fff;
   font-size: 32rpx;
   font-weight: 500;
   border: none;
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
 }
 </style>
+

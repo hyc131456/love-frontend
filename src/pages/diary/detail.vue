@@ -1,5 +1,6 @@
-<template>
+﻿<template>
   <view class="detail-page">
+    <AppNavBar title="日记详情" back />
     <view v-if="diary" class="diary-detail">
       <!-- 作者信息 -->
       <view class="diary-header">
@@ -80,6 +81,7 @@ import { ref, computed } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { diaryApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import AppNavBar from '@/components/AppNavBar.vue'
 
 const userStore = useUserStore()
 const diary = ref<any>(null)
@@ -201,7 +203,7 @@ const editDiary = () => {
 <style scoped>
 .detail-page {
   min-height: 100vh;
-  background: #fff;
+  background: #F7F5F3;
   padding-bottom: 140rpx;
 }
 
@@ -210,7 +212,8 @@ const editDiary = () => {
   background: #fff;
   border-radius: 32rpx;
   margin: 24rpx;
-  box-shadow: 0 16rpx 48rpx rgba(255, 107, 157, 0.05);
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .diary-header {
@@ -234,13 +237,13 @@ const editDiary = () => {
   display: block;
   font-size: 32rpx;
   font-weight: 500;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 8rpx;
 }
 
 .diary-time {
   font-size: 26rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .mood-icon {
@@ -250,16 +253,16 @@ const editDiary = () => {
 .edit-btn {
   margin-left: 16rpx;
   padding: 8rpx 20rpx;
-  background: #FFE4EC;
+  background: #FEF0F2;
   border-radius: 20rpx;
   font-size: 24rpx;
-  color: #FF6B9D;
+  color: #E8637A;
 }
 
 .diary-content {
   display: block;
   font-size: 32rpx;
-  color: #333;
+  color: #1C1B2E;
   line-height: 1.8;
   margin-bottom: 32rpx;
 }
@@ -287,14 +290,14 @@ const editDiary = () => {
 .diary-location,
 .diary-weather {
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
   margin-bottom: 16rpx;
 }
 
 .diary-actions {
   display: flex;
-  border-top: 1rpx dashed #F0F0F0;
-  border-bottom: 1rpx dashed #F0F0F0;
+  border-top: 1rpx dashed #EBEBF0;
+  border-bottom: 1rpx dashed #EBEBF0;
   padding: 24rpx 0;
   margin-bottom: 40rpx;
 }
@@ -304,14 +307,14 @@ const editDiary = () => {
   align-items: center;
   margin-right: 48rpx;
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
   padding: 8rpx 20rpx;
   border-radius: 32rpx;
   transition: all 0.2s;
 }
 
 .action-item:active {
-  background: #FFF5F7;
+  background: #FEF0F2;
   transform: scale(0.95);
 }
 
@@ -328,7 +331,7 @@ const editDiary = () => {
   display: block;
   font-size: 30rpx;
   font-weight: 500;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 24rpx;
 }
 
@@ -346,7 +349,7 @@ const editDiary = () => {
 
 .comment-content {
   flex: 1;
-  background: rgba(255, 245, 247, 0.6);
+  background: #F7F5F3;
   padding: 24rpx;
   border-radius: 24rpx;
   border-top-left-radius: 8rpx;
@@ -356,13 +359,13 @@ const editDiary = () => {
   display: block;
   font-size: 26rpx;
   font-weight: 500;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 8rpx;
 }
 
 .comment-text {
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
   line-height: 1.5;
 }
 
@@ -377,13 +380,14 @@ const editDiary = () => {
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  box-shadow: 0 -8rpx 32rpx rgba(255, 107, 157, 0.08);
+  border-top: 1rpx solid #EBEBF0;
+  box-shadow: 0 -8rpx 32rpx rgba(28, 27, 46, 0.06);
 }
 
 .comment-input {
   flex: 1;
   height: 80rpx;
-  background: #F8F8F8;
+  background: #F7F5F3;
   border-radius: 40rpx;
   padding: 0 40rpx;
   font-size: 28rpx;
@@ -393,8 +397,8 @@ const editDiary = () => {
 
 .comment-input:focus {
   background: #fff;
-  border-color: #FFB3C6;
-  box-shadow: 0 0 0 6rpx rgba(255, 179, 198, 0.2);
+  border-color: #E8637A;
+  box-shadow: 0 0 0 6rpx rgba(232, 99, 122, 0.12);
 }
 
 .btn-send {
@@ -402,13 +406,13 @@ const editDiary = () => {
   padding: 0 40rpx;
   height: 80rpx;
   line-height: 80rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: #E8637A;
   border-radius: 40rpx;
   color: #fff;
   font-size: 30rpx;
   font-weight: 500;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.3);
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
   transition: all 0.2s;
 }
 
@@ -420,3 +424,4 @@ const editDiary = () => {
   opacity: 0.5;
 }
 </style>
+

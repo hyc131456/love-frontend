@@ -1,29 +1,40 @@
 <template>
   <view class="wish-page">
-    <!-- Tab切换 -->
-    <view class="tabs">
-      <view 
-        class="tab" 
-        :class="{ active: activeTab === 'pending' }"
-        @click="activeTab = 'pending'"
-      >
-        进行中
+    <AppNavBar title="心愿" />
+
+    <view class="summary-bar">
+      <view class="summary-chip">
+        <view class="chip-dot chip-dot--todo"></view>
+        <text>{{ getStatusText(0) }} {{ todoCount }}</text>
       </view>
-      <view 
-        class="tab" 
-        :class="{ active: activeTab === 'completed' }"
-        @click="activeTab = 'completed'"
-      >
-        已完成
+      <view class="summary-chip">
+        <view class="chip-dot chip-dot--doing"></view>
+        <text>进行中 {{ doingCount }}</text>
+      </view>
+      <view class="summary-chip">
+        <view class="chip-dot chip-dot--done"></view>
+        <text>已完成 {{ completedCount }}</text>
       </view>
     </view>
+
+    <SegmentTabs v-model="activeTab" :items="tabItems" />
     
-    <!-- 心愿列表 -->
     <view class="wish-list">
-      <view v-for="wish in filteredWishes" :key="wish.id" class="wish-card" @click="editWish(wish)">
+      <view
+        v-for="wish in filteredWishes"
+        :key="wish.id"
+        class="wish-card"
+        :class="{ completed: wish.status === 2 }"
+        @click="handleWishClick(wish)"
+        @longpress.stop="showStatusSheet(wish)"
+        @longtap.stop="showStatusSheet(wish)"
+      >
         <view class="wish-header">
-          <text class="wish-category">{{ getCategoryIcon(wish.category) }}</text>
-          <text class="wish-title">{{ wish.title }}</text>
+          <view class="wish-category">{{ getCategoryIcon(wish.category) }}</view>
+          <view class="wish-heading">
+            <text class="wish-title" :class="{ done: wish.status === 2 }">{{ wish.title }}</text>
+          </view>
+          <text class="wish-status" :class="getStatusClass(wish.status)">{{ getStatusText(wish.status) }}</text>
         </view>
         
         <text v-if="wish.description" class="wish-desc">{{ wish.description }}</text>
@@ -34,34 +45,22 @@
         
         <view class="wish-footer">
           <text class="wish-date">{{ wish.targetDate || '无期限' }}</text>
-          <view v-if="wish.status === 0" class="wish-actions" @click.stop>
-            <text class="action-btn start" @click="startWish(wish)">开始</text>
-            <text class="action-btn complete" @click="completeWish(wish)">完成</text>
-          </view>
-          <view v-else-if="wish.status === 1" class="wish-actions" @click.stop>
-            <text class="action-btn complete" @click="completeWish(wish)">标记完成</text>
-          </view>
-          <text v-else class="completed-tag">✓ 已完成</text>
+          <text class="status-hint">长按修改状态</text>
         </view>
       </view>
       
-      <view v-if="filteredWishes.length === 0" class="empty-state">
-        <text class="empty-icon">💫</text>
-        <text class="empty-text">还没有心愿</text>
-        <text class="empty-tip">许下你们的共同心愿吧~</text>
-      </view>
+      <EmptyState
+        v-if="filteredWishes.length === 0 && !loading"
+        icon="♡"
+        title="还没有心愿"
+        desc="把想一起完成的事放在这里。"
+      />
     </view>
     
-    <!-- 添加按钮 -->
-    <view class="fab-btn" @click="showAddModal = true">
-      <text>+</text>
-    </view>
+    <AppFab icon="+" @click="showAddModal = true" />
     
-    <!-- 添加弹窗 -->
-    <view v-if="showAddModal" class="modal-mask" @click="closeModal">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">{{ isEditMode ? '编辑心愿' : '添加心愿' }}</text>
-        
+    <AppSheet :open="showAddModal" :title="isEditMode ? '编辑心愿' : '添加心愿'" @close="closeModal">
+      <scroll-view scroll-y class="sheet-scroll">
         <input v-model="newWish.title" class="input" placeholder="心愿标题" />
         
         <textarea 
@@ -103,10 +102,26 @@
           </picker>
           <text v-if="newWish.targetDate" class="date-clear" @click.stop="newWish.targetDate = ''">×</text>
         </view>
-        
-        <button class="btn-primary" @click="saveWish">{{ isEditMode ? '保存修改' : '保存心愿' }}</button>
+      </scroll-view>
+      <button class="btn-primary" @click="saveWish">{{ isEditMode ? '保存修改' : '保存心愿' }}</button>
+    </AppSheet>
+
+    <AppSheet :open="showStatusModal" title="修改心愿状态" @close="closeStatusSheet">
+      <view class="status-options">
+        <view
+          v-for="item in statusOptions"
+          :key="item.value"
+          class="status-option"
+          :class="{ selected: selectedWish?.status === item.value }"
+          @click="selectStatus(item.value)"
+        >
+          <text class="wish-status" :class="getStatusClass(item.value)">{{ getStatusText(item.value) }}</text>
+          <text v-if="selectedWish?.status === item.value" class="status-current">当前状态</text>
+        </view>
       </view>
-    </view>
+    </AppSheet>
+
+    <AppTabBar current="/pages/wish/index" />
   </view>
 </template>
 
@@ -115,6 +130,12 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { wishApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import AppFab from '@/components/AppFab.vue'
+import AppNavBar from '@/components/AppNavBar.vue'
+import AppSheet from '@/components/AppSheet.vue'
+import AppTabBar from '@/components/AppTabBar.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import SegmentTabs from '@/components/SegmentTabs.vue'
 
 const userStore = useUserStore()
 
@@ -128,7 +149,17 @@ const categories = [
 
 const activeTab = ref<'pending' | 'completed'>('pending')
 const showAddModal = ref(false)
+const showStatusModal = ref(false)
 const loading = ref(false)
+const tabItems = [
+  { label: '进行中', value: 'pending' },
+  { label: '已完成', value: 'completed' }
+]
+const statusOptions = [
+  { value: 0 },
+  { value: 1 },
+  { value: 2 }
+]
 
 // 心愿列表
 const wishList = ref<any[]>([])
@@ -136,6 +167,8 @@ const wishList = ref<any[]>([])
 // 编辑模式
 const isEditMode = ref(false)
 const editingWishId = ref<number | null>(null)
+const selectedWish = ref<any | null>(null)
+const suppressNextClick = ref(false)
 
 const newWish = ref({
   title: '',
@@ -151,6 +184,14 @@ const today = new Date().toISOString().split('T')[0]
 // 日期选择变更
 const onDateChange = (e: any) => {
   newWish.value.targetDate = e.detail.value
+}
+
+const handleWishClick = (wish: any) => {
+  if (suppressNextClick.value) {
+    suppressNextClick.value = false
+    return
+  }
+  editWish(wish)
 }
 
 // 打开编辑弹窗
@@ -199,9 +240,14 @@ const loadWishList = async () => {
 
 // 页面显示时刷新状态并加载数据
 onShow(async () => {
+  uni.hideTabBar()
   await userStore.fetchUserInfo()
   loadWishList()
 })
+
+const todoCount = computed(() => wishList.value.filter(w => w.status === 0).length)
+const doingCount = computed(() => wishList.value.filter(w => w.status === 1).length)
+const completedCount = computed(() => wishList.value.filter(w => w.status === 2).length)
 
 const filteredWishes = computed(() => {
   if (activeTab.value === 'pending') {
@@ -214,24 +260,64 @@ const getCategoryIcon = (category: string) => {
   return categories.find(c => c.value === category)?.icon || '💫'
 }
 
-const startWish = async (wish: any) => {
+const showStatusSheet = (wish: any) => {
+  suppressNextClick.value = true
+  selectedWish.value = wish
+  showStatusModal.value = true
+}
+
+const closeStatusSheet = () => {
+  showStatusModal.value = false
+  selectedWish.value = null
+  setTimeout(() => {
+    suppressNextClick.value = false
+  }, 200)
+}
+
+const getStatusText = (status: number) => {
+  if (status === 2) return '已完成 ✓'
+  if (status === 1) return '进行中'
+  return `未${String.fromCharCode(24320, 22987)}`
+}
+
+const getStatusClass = (status: number) => {
+  if (status === 2) return 'wish-status done'
+  if (status === 1) return 'wish-status doing'
+  return 'wish-status todo'
+}
+
+const updateWishStatus = async (wish: any, status: number) => {
   try {
-    await wishApi.updateStatus(wish.id, 1)
-    wish.status = 1
-    uni.showToast({ title: '开始啦！', icon: 'success' })
+    await wishApi.updateStatus(wish.id, status)
+    wish.status = status
+    closeStatusSheet()
   } catch (e) {
     // 错误已在 request 封装中处理
   }
 }
 
-const completeWish = async (wish: any) => {
-  try {
-    await wishApi.updateStatus(wish.id, 2)
-    wish.status = 2
-    uni.showToast({ title: '心愿达成！', icon: 'success' })
-  } catch (e) {
-    // 错误已在 request 封装中处理
+const selectStatus = (status: number) => {
+  const wish = selectedWish.value
+  if (!wish || wish.status === status) {
+    closeStatusSheet()
+    return
   }
+
+  if (wish.status === 2 && status !== 2) {
+    uni.showModal({
+      title: '确认修改状态',
+      content: `要将这个心愿改为「${getStatusText(status)}」吗？`,
+      confirmColor: '#E8637A',
+      success: res => {
+        if (res.confirm) {
+          updateWishStatus(wish, status)
+        }
+      }
+    })
+    return
+  }
+
+  updateWishStatus(wish, status)
 }
 
 const saveWish = async () => {
@@ -270,83 +356,142 @@ const saveWish = async () => {
 <style scoped>
 .wish-page {
   min-height: 100vh;
-  background: #F5F5F5;
-  padding-bottom: 120rpx;
+  background: #F7F5F3;
+  padding-bottom: 164rpx;
 }
 
-.tabs {
+.summary-bar {
   display: flex;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  padding: 24rpx 32rpx;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.02);
+  align-items: center;
+  gap: 28rpx;
+  margin: 24rpx 32rpx 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 28rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.05);
 }
 
-.tab {
-  flex: 1;
-  text-align: center;
-  padding: 24rpx;
-  font-size: 30rpx;
-  color: #999;
-  position: relative;
-  transition: all 0.3s;
+.summary-chip {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  color: #8A8A9A;
 }
 
-.tab.active {
-  color: #FF6B9D;
-  font-weight: 600;
-  transform: scale(1.05);
+.chip-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+}
+
+.chip-dot--todo {
+  background: #8A8A9A;
+}
+
+.chip-dot--doing {
+  background: #F5A623;
+}
+
+.chip-dot--done {
+  background: #4CAF50;
 }
 
 .wish-list {
-  padding: 32rpx 0;
+  padding: 24rpx 0 0;
 }
 
 .wish-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  margin: 0 32rpx 32rpx;
+  background: #FFFFFF;
+  margin: 0 32rpx 24rpx;
   border-radius: 32rpx;
-  padding: 36rpx;
-  box-shadow: 0 16rpx 48rpx rgba(255, 107, 157, 0.08);
+  padding: 30rpx 32rpx;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
   transition: all 0.2s ease;
+}
+
+.wish-card.completed {
+  opacity: 0.72;
 }
 
 .wish-card:active {
   transform: scale(0.98);
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.04);
+  box-shadow: 0 8rpx 24rpx rgba(28, 27, 46, 0.08);
 }
 
 .wish-header {
   display: flex;
-  align-items: center;
-  margin-bottom: 24rpx;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
 }
 
 .wish-category {
-  font-size: 48rpx;
+  width: 72rpx;
+  height: 72rpx;
   margin-right: 20rpx;
-  filter: drop-shadow(0 4rpx 8rpx rgba(0, 0, 0, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22rpx;
+  background: #FEF0F2;
+  font-size: 34rpx;
+}
+
+.wish-heading {
+  flex: 1;
+  min-width: 0;
 }
 
 .wish-title {
+  display: block;
   font-size: 32rpx;
+  line-height: 40rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
+}
+
+.wish-title.done {
+  color: #8A8A9A;
+  text-decoration: line-through;
+}
+
+.wish-status {
+  flex-shrink: 0;
+  margin-left: 16rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  line-height: 28rpx;
+  font-weight: 600;
+}
+
+.wish-status.todo {
+  background: #F7F5F3;
+  color: #8A8A9A;
+}
+
+.wish-status.doing {
+  background: #FFF7E6;
+  color: #F5A623;
+}
+
+.wish-status.done {
+  background: #F0FFF4;
+  color: #4CAF50;
 }
 
 .wish-desc {
   font-size: 26rpx;
-  color: #666;
+  color: #5B5A6D;
   margin-bottom: 16rpx;
 }
 
 .wish-budget {
   font-size: 26rpx;
-  color: #F39C12;
+  color: #F5A623;
   margin-bottom: 16rpx;
 }
 
@@ -361,123 +506,24 @@ const saveWish = async () => {
 
 .wish-date {
   font-size: 24rpx;
-  color: #CCC;
+  color: #8A8A9A;
 }
 
-.wish-actions {
-  display: flex;
-  gap: 16rpx;
+.status-hint {
+  font-size: 22rpx;
+  color: #8A8A9A;
 }
 
-.action-btn {
-  padding: 12rpx 32rpx;
-  border-radius: 32rpx;
-  font-size: 26rpx;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.action-btn:active {
-  transform: scale(0.95);
-}
-
-.action-btn.start {
-  background: #F8F8F8;
-  color: #666;
-  border: 2rpx solid #EEE;
-}
-
-.action-btn.complete {
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
-  color: #fff;
-  box-shadow: 0 4rpx 16rpx rgba(255, 107, 157, 0.3);
-}
-
-.completed-tag {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #FFB3C6;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
-}
-
-.empty-icon {
-  font-size: 100rpx;
-  margin-bottom: 24rpx;
-}
-
-.empty-text {
-  font-size: 32rpx;
-  color: #333;
-  margin-bottom: 16rpx;
-}
-
-.empty-tip {
-  font-size: 26rpx;
-  color: #999;
-}
-
-.fab-btn {
-  position: fixed;
-  right: 40rpx;
-  bottom: 160rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 56rpx;
-  color: #fff;
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.4);
-}
-
-/* 弹窗 */
-.modal-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-}
-
-.modal-content {
-  width: 85%;
-  max-width: 85%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 40rpx;
-  padding: 48rpx;
-  box-sizing: border-box;
-  box-shadow: 0 24rpx 64rpx rgba(0, 0, 0, 0.1);
-}
-
-.modal-title {
-  display: block;
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #333;
-  text-align: center;
-  margin-bottom: 40rpx;
+.sheet-scroll {
+  max-height: 58vh;
 }
 
 .input {
   width: 100%;
   height: 88rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
   margin-bottom: 24rpx;
@@ -487,8 +533,9 @@ const saveWish = async () => {
 .textarea {
   width: 100%;
   height: 160rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 24rpx;
   font-size: 28rpx;
   margin-bottom: 24rpx;
@@ -504,21 +551,22 @@ const saveWish = async () => {
 
 .category-item {
   padding: 16rpx 24rpx;
-  background: #F5F5F5;
+  background: #F7F5F3;
   border-radius: 32rpx;
   font-size: 26rpx;
 }
 
 .category-item.active {
-  background: #FFE4EC;
-  color: #FF6B9D;
+  background: #FEF0F2;
+  color: #E8637A;
 }
 
 .date-picker-wrapper {
   display: flex;
   align-items: center;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 0 24rpx;
   margin-bottom: 24rpx;
   box-sizing: border-box;
@@ -534,17 +582,17 @@ const saveWish = async () => {
 
 .date-label {
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .date-value {
   font-size: 28rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .date-clear {
   font-size: 40rpx;
-  color: #999;
+  color: #8A8A9A;
   padding: 0 16rpx;
 }
 
@@ -552,7 +600,7 @@ const saveWish = async () => {
   width: 100%;
   height: 88rpx;
   line-height: 88rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: #E8637A;
   border-radius: 44rpx;
   color: #fff;
   font-size: 32rpx;
@@ -560,5 +608,32 @@ const saveWish = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.status-option {
+  min-height: 88rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 22rpx;
+  background: #F7F5F3;
+  border: 2rpx solid transparent;
+}
+
+.status-option.selected {
+  background: #FFFFFF;
+  border-color: #E8637A;
+}
+
+.status-current {
+  font-size: 24rpx;
+  color: #8A8A9A;
 }
 </style>

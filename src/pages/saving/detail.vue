@@ -1,5 +1,6 @@
-<template>
+﻿<template>
   <view class="detail-page">
+    <AppNavBar title="储蓄详情" back />
     <view v-if="saving" class="detail-content">
       <!-- 基本信息 -->
       <view class="info-card">
@@ -76,6 +77,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { savingApi } from '@/api'
+import AppNavBar from '@/components/AppNavBar.vue'
 
 const saving = ref<any>(null)
 const records = ref<any[]>([])
@@ -121,7 +123,7 @@ const doDeposit = async () => {
     depositAmount.value = ''
     depositNote.value = ''
     loadDetail(saving.value.id)
-    uni.showToast({ title: '存入成功！', icon: 'success' })
+    uni.showToast({ title: '存入成功', icon: 'success' })
   } catch (e) {
     console.error('存款失败', e)
   }
@@ -146,7 +148,7 @@ onLoad((options: any) => {
 <style scoped>
 .detail-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #F7F5F3;
   padding-bottom: 40rpx;
 }
 
@@ -155,8 +157,8 @@ onLoad((options: any) => {
 }
 
 .info-card {
-  background: linear-gradient(135deg, #FF6B9D, #FF8E9E);
-  border-radius: 24rpx;
+  background: linear-gradient(160deg, #E8637A, #9B8EC4);
+  border-radius: 32rpx;
   padding: 48rpx;
   text-align: center;
   margin-bottom: 24rpx;
@@ -187,9 +189,11 @@ onLoad((options: any) => {
 
 .progress-card, .contrib-card, .deposit-card, .records-card {
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 32rpx;
   padding: 32rpx;
   margin-bottom: 24rpx;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .amount-display {
@@ -200,18 +204,18 @@ onLoad((options: any) => {
 .current-amount {
   font-size: 48rpx;
   font-weight: 700;
-  color: #FF6B9D;
+  color: #E8637A;
 }
 
 .target-amount {
   font-size: 28rpx;
-  color: #999;
+  color: #8A8A9A;
   margin-left: 8rpx;
 }
 
 .progress-bar {
   height: 20rpx;
-  background: #F0F0F0;
+  background: #EBEBF0;
   border-radius: 10rpx;
   overflow: hidden;
   margin-bottom: 12rpx;
@@ -219,7 +223,7 @@ onLoad((options: any) => {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #FF6B9D, #FF8E9E);
+  background: linear-gradient(90deg, #E8637A, #9B8EC4);
   border-radius: 10rpx;
 }
 
@@ -227,7 +231,7 @@ onLoad((options: any) => {
   display: block;
   text-align: center;
   font-size: 28rpx;
-  color: #FF6B9D;
+  color: #E8637A;
   font-weight: 600;
   margin-bottom: 16rpx;
 }
@@ -235,14 +239,14 @@ onLoad((options: any) => {
 .deadline-info {
   text-align: center;
   font-size: 26rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .card-title {
   display: block;
   font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 24rpx;
 }
 
@@ -263,7 +267,7 @@ onLoad((options: any) => {
   display: flex;
   justify-content: space-between;
   font-size: 26rpx;
-  color: #666;
+  color: #5B5A6D;
 }
 
 .deposit-form {
@@ -274,8 +278,9 @@ onLoad((options: any) => {
 .input {
   width: 100%;
   height: 88rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
   margin-bottom: 20rpx;
@@ -289,11 +294,12 @@ onLoad((options: any) => {
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: linear-gradient(135deg, #FF6B9D, #FF8E9E);
+  background: #E8637A;
   border-radius: 44rpx;
   color: #fff;
   font-size: 32rpx;
   border: none;
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
 }
 
 .record-list {
@@ -306,7 +312,7 @@ onLoad((options: any) => {
   justify-content: space-between;
   align-items: center;
   padding: 24rpx 0;
-  border-bottom: 1rpx solid #F5F5F5;
+  border-bottom: 1rpx solid #F7F5F3;
 }
 
 .record-item:last-child {
@@ -315,8 +321,8 @@ onLoad((options: any) => {
 
 .record-user {
   display: inline-block;
-  background: #FFE4EC;
-  color: #FF6B9D;
+  background: #FEF0F2;
+  color: #E8637A;
   padding: 4rpx 16rpx;
   border-radius: 16rpx;
   font-size: 24rpx;
@@ -325,7 +331,7 @@ onLoad((options: any) => {
 
 .record-note {
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .record-right {
@@ -342,13 +348,14 @@ onLoad((options: any) => {
 
 .record-time {
   font-size: 22rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .empty-tip {
   text-align: center;
   padding: 40rpx;
-  color: #999;
+  color: #8A8A9A;
   font-size: 26rpx;
 }
 </style>
+

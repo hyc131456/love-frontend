@@ -196,16 +196,13 @@ const handleWxLogin = async () => {
 <style scoped>
 .login-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #FFF9FA 0%, #FFE4EC 100%);
+  background: linear-gradient(160deg, #FDE8EC 0%, #F3EEFF 56%, #E8F4FF 100%);
   position: relative;
   overflow: hidden;
 }
 
 .bg-decoration {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  display: none;
 }
 
 .circle {
@@ -234,7 +231,8 @@ const handleWxLogin = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 120rpx 48rpx 100rpx;
+  justify-content: space-between;
+  padding: 150rpx 48rpx 72rpx;
   min-height: 100vh;
 }
 
@@ -242,39 +240,50 @@ const handleWxLogin = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 60rpx;
+  margin-bottom: 44rpx;
 }
 
 .logo {
-  font-size: 100rpx;
+  width: 160rpx;
+  height: 160rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 76rpx;
   margin-bottom: 24rpx;
+  border-radius: 48rpx;
+  background: linear-gradient(135deg, #E8637A 0%, #9B8EC4 100%);
+  box-shadow: 0 16rpx 48rpx rgba(232, 99, 122, 0.35);
 }
 
 .title {
-  font-size: 44rpx;
-  font-weight: 600;
-  color: #333;
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #1C1B2E;
   margin-bottom: 12rpx;
+  letter-spacing: 4rpx;
 }
 
 .subtitle {
   font-size: 26rpx;
-  color: #999;
+  color: #8A8A9A;
+  letter-spacing: 4rpx;
 }
 
 .form-section {
   width: 100%;
   background: #fff;
   border-radius: 32rpx;
-  padding: 40rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  padding: 36rpx;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 6rpx 24rpx rgba(28, 27, 46, 0.08);
   box-sizing: border-box;
 }
 
 .tabs {
   display: flex;
   margin-bottom: 40rpx;
-  background: #F5F5F5;
+  background: #F7F5F3;
   border-radius: 48rpx;
   padding: 6rpx;
 }
@@ -282,9 +291,9 @@ const handleWxLogin = async () => {
 .tab {
   flex: 1;
   text-align: center;
-  padding: 20rpx;
-  font-size: 30rpx;
-  color: #999;
+  padding: 18rpx;
+  font-size: 28rpx;
+  color: #8A8A9A;
   border-radius: 44rpx;
   transition: all 0.3s ease;
 }
@@ -292,8 +301,8 @@ const handleWxLogin = async () => {
 .tab.active {
   color: #fff;
   font-weight: 600;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
-  box-shadow: 0 4rpx 16rpx rgba(255, 107, 157, 0.35);
+  background: #E8637A;
+  box-shadow: 0 6rpx 18rpx rgba(232, 99, 122, 0.25);
 }
 
 .form {
@@ -308,17 +317,17 @@ const handleWxLogin = async () => {
   align-items: center;
   width: 100%;
   height: 96rpx;
-  background: #F8F8F8;
-  border: 2rpx solid #EEE;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
 .input-group:focus-within {
-  border-color: #FF6B9D;
-  background: #FFF5F7;
-  box-shadow: 0 4rpx 12rpx rgba(255, 107, 157, 0.1);
+  border-color: #E8637A;
+  background: #FEF0F2;
+  box-shadow: 0 4rpx 12rpx rgba(232, 99, 122, 0.1);
 }
 
 .input-icon {
@@ -338,10 +347,10 @@ const handleWxLogin = async () => {
   background: transparent;
   border: none;
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
   padding-right: 32rpx;
   outline: none;
-  caret-color: #FF6B9D; /* 修改闪烁光标颜色为粉色 */
+  caret-color: #E8637A; /* 修改闪烁光标颜色为品牌色 */
   -webkit-tap-highlight-color: transparent; /* 去除移动端点击灰色/蓝色高亮 */
 }
 
@@ -354,7 +363,7 @@ const handleWxLogin = async () => {
 input:-internal-autofill-selected {
   background-color: transparent !important;
   background-image: none !important;
-  color: #333 !important;
+  color: #1C1B2E !important;
 }
 
 .input:-webkit-autofill,
@@ -362,41 +371,41 @@ input:-internal-autofill-selected {
 .input:-webkit-autofill:focus, 
 .input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
-  -webkit-text-fill-color: #333 !important;
+  -webkit-text-fill-color: #1C1B2E !important;
   transition: background-color 9999s ease-in-out 0s;
 }
 
 .btn-submit {
   height: 96rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: #E8637A;
   border-radius: 48rpx;
   color: #fff;
   font-size: 32rpx;
   font-weight: 600;
   border: none;
   margin-top: 16rpx;
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.4);
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.28);
   letter-spacing: 4rpx;
   transition: all 0.2s ease;
 }
 
 .btn-submit:active {
   transform: scale(0.97);
-  box-shadow: 0 4rpx 12rpx rgba(255, 107, 157, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(232, 99, 122, 0.2);
 }
 
 .divider {
   display: flex;
   align-items: center;
   margin: 40rpx 0;
-  color: #999;
+  color: #8A8A9A;
   font-size: 24rpx;
 }
 
 .divider .line {
   flex: 1;
   height: 2rpx;
-  background: #EEE;
+  background: #EBEBF0;
 }
 
 .divider text {
@@ -412,7 +421,9 @@ input:-internal-autofill-selected {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24rpx 48rpx;
+  width: 100%;
+  height: 96rpx;
+  padding: 0 48rpx;
   background: #07C160;
   border-radius: 48rpx;
   color: #fff;
@@ -425,16 +436,16 @@ input:-internal-autofill-selected {
 }
 
 .agreement {
-  position: absolute;
-  bottom: 60rpx;
+  margin-top: 28rpx;
+  position: static;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .agreement .link {
-  color: #FF6B9D;
+  color: #E8637A;
 }
 </style>

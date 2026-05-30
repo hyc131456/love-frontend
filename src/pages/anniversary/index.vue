@@ -1,5 +1,7 @@
-<template>
+﻿<template>
   <view class="anniversary-page">
+    <AppNavBar title="纪念日" back />
+
     <view v-if="!hasCoupled" class="empty-card">
       <text class="empty-title">还没有可查看的纪念日</text>
       <text class="empty-desc">完成配对后，这里会集中展示恋爱纪念日和你们添加的纪念日事件。</text>
@@ -30,7 +32,7 @@
 
         <view v-if="anniversaries.length" class="anniversary-list">
           <view v-for="item in anniversaries" :key="item.id" class="anniversary-item">
-            <view class="item-icon" :style="{ background: item.color || '#FF6B9D' }">
+            <view class="item-icon" :style="{ background: item.color || '#E8637A' }">
               {{ item.icon || '💖' }}
             </view>
             <view class="item-main">
@@ -63,6 +65,7 @@ import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { calendarApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import AppNavBar from '@/components/AppNavBar.vue'
 
 interface AnniversaryItem {
   id: number
@@ -150,9 +153,7 @@ onShow(async () => {
 <style scoped>
 .anniversary-page {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(255, 107, 157, 0.18), transparent 28%),
-    linear-gradient(180deg, #fff4f7 0%, #fffdfd 50%, #fff7f2 100%);
+  background: #F7F5F3;
   padding: 32rpx;
   box-sizing: border-box;
 }
@@ -161,15 +162,15 @@ onShow(async () => {
 .section-card,
 .empty-card {
   background: rgba(255, 255, 255, 0.88);
-  border: 1rpx solid rgba(255, 107, 157, 0.08);
+  border: 1rpx solid #EBEBF0;
   border-radius: 32rpx;
-  box-shadow: 0 18rpx 50rpx rgba(214, 106, 90, 0.08);
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .hero-card {
   padding: 40rpx 36rpx;
   margin-bottom: 24rpx;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e7f 100%);
+  background: linear-gradient(160deg, #E8637A 0%, #9B8EC4 100%);
 }
 
 .hero-badge {
@@ -220,19 +221,19 @@ onShow(async () => {
 .section-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #33272a;
+  color: #1C1B2E;
 }
 
 .section-tip {
   font-size: 24rpx;
-  color: #ff6b9d;
+  color: #E8637A;
 }
 
 .section-desc {
   display: block;
   font-size: 25rpx;
   line-height: 1.7;
-  color: #7a6d72;
+  color: #5B5A6D;
 }
 
 .anniversary-list {
@@ -246,7 +247,8 @@ onShow(async () => {
   align-items: center;
   padding: 24rpx;
   border-radius: 24rpx;
-  background: linear-gradient(180deg, #fffafb 0%, #fff6f3 100%);
+  background: #F7F5F3;
+  border: 1rpx solid #EBEBF0;
 }
 
 .item-icon {
@@ -276,15 +278,15 @@ onShow(async () => {
 .item-title {
   font-size: 29rpx;
   font-weight: 600;
-  color: #352a2d;
+  color: #1C1B2E;
   margin-right: 12rpx;
 }
 
 .item-tag {
   padding: 4rpx 12rpx;
   border-radius: 999rpx;
-  background: rgba(255, 107, 157, 0.12);
-  color: #ff6b9d;
+  background: #FEF0F2;
+  color: #E8637A;
   font-size: 22rpx;
 }
 
@@ -294,7 +296,7 @@ onShow(async () => {
 .item-countdown {
   display: block;
   font-size: 24rpx;
-  color: #7b6f74;
+  color: #5B5A6D;
 }
 
 .item-reminder {
@@ -310,7 +312,7 @@ onShow(async () => {
 .item-countdown {
   font-size: 28rpx;
   font-weight: 600;
-  color: #ff6b9d;
+  color: #E8637A;
   margin-bottom: 10rpx;
 }
 
@@ -324,7 +326,7 @@ onShow(async () => {
   display: block;
   font-size: 34rpx;
   font-weight: 600;
-  color: #352a2d;
+  color: #1C1B2E;
   margin-bottom: 18rpx;
 }
 
@@ -332,7 +334,7 @@ onShow(async () => {
 .empty-inline {
   display: block;
   font-size: 26rpx;
-  color: #7b6f74;
+  color: #5B5A6D;
   line-height: 1.7;
 }
 
@@ -345,7 +347,8 @@ onShow(async () => {
   height: 92rpx;
   line-height: 92rpx;
   border-radius: 999rpx;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e7f 100%);
+  background: #E8637A;
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
   color: #fff;
   font-size: 30rpx;
   border: none;

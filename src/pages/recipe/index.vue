@@ -1,7 +1,23 @@
 <template>
   <view class="recipe-page">
-    <!-- 分类Tab -->
-    <view class="tabs">
+    <AppNavBar title="" back />
+
+    <view class="recipe-header">
+      <view class="header-row">
+        <text class="header-title">家庭菜谱</text>
+        <button class="create-btn" @click="goEdit()">+ 创建菜谱</button>
+      </view>
+
+      <view class="search-box">
+        <text class="search-icon">🔍</text>
+        <input
+          v-model="searchKeyword"
+          class="search-input"
+          placeholder="搜索菜名、食材…"
+          confirm-type="search"
+        />
+      </view>
+
       <scroll-view scroll-x class="tab-scroll">
         <view 
           v-for="cat in categories" 
@@ -34,22 +50,18 @@
             <text v-if="recipe.cookTime" class="cook-time">⏱ {{ recipe.cookTime }}分钟</text>
           </view>
           <view class="recipe-stats">
-            <text v-if="recipe.tryCount > 0" class="try-count">做过 {{ recipe.tryCount }} 次</text>
+            <text v-if="recipe.tryCount > 0" class="try-count">已尝试 {{ recipe.tryCount }} 次</text>
             <text v-if="recipe.isFavorite" class="favorite-tag">❤️</text>
           </view>
         </view>
       </view>
       
-      <view v-if="filteredList.length === 0" class="empty-state">
-        <text class="empty-icon">👨‍🍳</text>
-        <text class="empty-text">还没有菜谱</text>
-        <text class="empty-tip">记录你们的专属美食吧~</text>
-      </view>
-    </view>
-    
-    <!-- 添加按钮 -->
-    <view class="fab-btn" @click="goEdit()">
-      <text>+</text>
+      <EmptyState
+        v-if="filteredList.length === 0"
+        icon="🍳"
+        :title="emptyTitle"
+        desc="记录你们的专属美食吧。"
+      />
     </view>
   </view>
 </template>
@@ -58,6 +70,8 @@
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { recipeApi } from '@/api'
+import AppNavBar from '@/components/AppNavBar.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const categories = [
   { value: '', label: '全部', icon: '📋' },
@@ -69,11 +83,31 @@ const categories = [
 ]
 
 const activeCategory = ref('')
+const searchKeyword = ref('')
 const recipeList = ref<any[]>([])
 
 const filteredList = computed(() => {
-  if (!activeCategory.value) return recipeList.value
-  return recipeList.value.filter(r => r.category === activeCategory.value)
+  const keyword = searchKeyword.value.trim().toLowerCase()
+  return recipeList.value.filter(recipe => {
+    const matchesCategory = !activeCategory.value || recipe.category === activeCategory.value
+    if (!matchesCategory) return false
+    if (!keyword) return true
+
+    const haystack = [
+      recipe.name,
+      recipe.ingredients,
+      recipe.tips
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+
+    return haystack.includes(keyword)
+  })
+})
+
+const emptyTitle = computed(() => {
+  return searchKeyword.value.trim() ? '没有找到相关菜谱' : '还没有菜谱'
 })
 
 const getDifficultyText = (d: number) => {
@@ -107,46 +141,103 @@ onShow(() => {
 <style scoped>
 .recipe-page {
   min-height: 100vh;
-  background: #F5F5F5;
-  padding-bottom: 120rpx;
+  background: #F7F5F3;
+  padding-bottom: 40rpx;
 }
 
-.tabs {
-  background: #fff;
-  padding: 16rpx 0;
+.recipe-header {
+  background: #FFFFFF;
+  padding: 18rpx 32rpx 0;
+  border-bottom: 1rpx solid #EBEBF0;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.header-title {
+  font-size: 36rpx;
+  line-height: 44rpx;
+  font-weight: 700;
+  color: #1C1B2E;
+}
+
+.create-btn {
+  height: 60rpx;
+  padding: 0 28rpx;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999rpx;
+  background: #E8637A;
+  color: #FFFFFF;
+  font-size: 26rpx;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.search-box {
+  height: 72rpx;
+  margin-bottom: 16rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  border-radius: 20rpx;
+  background: #F7F5F3;
+}
+
+.search-icon {
+  flex-shrink: 0;
+  font-size: 28rpx;
+  color: #8A8A9A;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  height: 72rpx;
+  font-size: 28rpx;
+  color: #1C1B2E;
 }
 
 .tab-scroll {
   white-space: nowrap;
-  padding: 0 16rpx;
+  padding: 0;
 }
 
 .tab {
   display: inline-block;
   padding: 16rpx 28rpx;
   font-size: 26rpx;
-  color: #666;
-  background: #F5F5F5;
+  color: #5B5A6D;
+  background: #F7F5F3;
   border-radius: 32rpx;
   margin-right: 16rpx;
 }
 
 .tab.active {
-  background: #FFE4EC;
-  color: #FF6B9D;
+  background: #FEF0F2;
+  color: #E8637A;
 }
 
 .recipe-list {
-  padding: 24rpx;
+  padding: 24rpx 32rpx;
 }
 
 .recipe-card {
   display: flex;
   background: #fff;
-  border-radius: 20rpx;
+  border-radius: 28rpx;
   overflow: hidden;
   margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .recipe-cover {
@@ -158,7 +249,7 @@ onShow(() => {
 .recipe-cover-placeholder {
   width: 200rpx;
   height: 200rpx;
-  background: #FFF5F7;
+  background: #FEF0F2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -177,7 +268,7 @@ onShow(() => {
 .recipe-name {
   font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 12rpx;
 }
 
@@ -190,12 +281,12 @@ onShow(() => {
 
 .difficulty {
   font-size: 24rpx;
-  color: #F39C12;
+  color: #F5A623;
 }
 
 .cook-time {
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .recipe-stats {
@@ -206,8 +297,8 @@ onShow(() => {
 
 .try-count {
   font-size: 22rpx;
-  color: #999;
-  background: #F5F5F5;
+  color: #8A8A9A;
+  background: #F7F5F3;
   padding: 4rpx 12rpx;
   border-radius: 12rpx;
 }
@@ -216,30 +307,4 @@ onShow(() => {
   font-size: 24rpx;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
-}
-
-.empty-icon { font-size: 100rpx; margin-bottom: 24rpx; }
-.empty-text { font-size: 32rpx; color: #333; margin-bottom: 16rpx; }
-.empty-tip { font-size: 26rpx; color: #999; }
-
-.fab-btn {
-  position: fixed;
-  right: 40rpx;
-  bottom: 200rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #FF6B9D, #FF8E9E);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48rpx;
-  color: #fff;
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.4);
-}
 </style>

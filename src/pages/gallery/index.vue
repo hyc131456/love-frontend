@@ -1,6 +1,7 @@
 <template>
   <view class="gallery-page">
-    <!-- 月份筛选 -->
+    <AppNavBar title="图库" back />
+
     <view class="filter-bar">
       <picker mode="date" fields="month" @change="onMonthChange">
         <view class="filter-btn">
@@ -11,7 +12,6 @@
       <view v-if="filterYear" class="clear-filter" @click="clearFilter">清除筛选</view>
     </view>
     
-    <!-- 图片网格 -->
     <view class="image-grid">
       <view 
         v-for="(img, index) in imageList" 
@@ -31,12 +31,12 @@
       </view>
     </view>
     
-    <!-- 空状态 -->
-    <view v-if="imageList.length === 0 && !loading" class="empty-state">
-      <text class="empty-icon">📷</text>
-      <text class="empty-text">还没有照片</text>
-      <text class="empty-tip">写日记时添加的图片会自动归集到这里~</text>
-    </view>
+    <EmptyState
+      v-if="imageList.length === 0 && !loading"
+      icon="▦"
+      title="还没有照片"
+      desc="写日记时添加的图片会自动归集到这里。"
+    />
     
     <!-- 加载更多 -->
     <view v-if="hasMore" class="load-more" @click="loadMore">
@@ -48,6 +48,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
+import AppNavBar from '@/components/AppNavBar.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 // 手动导入工具函数
 import { get } from '@/utils/request'
@@ -127,15 +129,20 @@ onShow(() => {
 <style scoped>
 .gallery-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #F7F5F3;
+  padding-bottom: 40rpx;
 }
 
 .filter-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20rpx 24rpx;
-  background: #fff;
+  margin: 24rpx 32rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 28rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.05);
 }
 
 .filter-btn {
@@ -143,10 +150,10 @@ onShow(() => {
   align-items: center;
   gap: 8rpx;
   padding: 12rpx 24rpx;
-  background: #F5F5F5;
+  background: #F7F5F3;
   border-radius: 24rpx;
   font-size: 26rpx;
-  color: #666;
+  color: #5B5A6D;
 }
 
 .arrow-down {
@@ -155,13 +162,13 @@ onShow(() => {
 
 .clear-filter {
   font-size: 26rpx;
-  color: #FF6B9D;
+  color: #E8637A;
 }
 
 .image-grid {
   display: flex;
   flex-wrap: wrap;
-  padding: 4rpx;
+  padding: 0 28rpx;
 }
 
 .image-item {
@@ -169,6 +176,8 @@ onShow(() => {
   aspect-ratio: 1;
   margin: 2rpx;
   position: relative;
+  border-radius: 12rpx;
+  overflow: hidden;
 }
 
 .grid-image {
@@ -186,21 +195,10 @@ onShow(() => {
   padding: 2rpx 8rpx;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 160rpx 0;
-}
-
-.empty-icon { font-size: 100rpx; margin-bottom: 24rpx; }
-.empty-text { font-size: 32rpx; color: #333; margin-bottom: 16rpx; }
-.empty-tip { font-size: 26rpx; color: #999; text-align: center; padding: 0 48rpx; }
-
 .load-more {
   text-align: center;
   padding: 32rpx;
-  color: #FF6B9D;
+  color: #E8637A;
   font-size: 28rpx;
 }
 </style>

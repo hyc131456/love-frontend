@@ -1,13 +1,24 @@
 <template>
   <view class="diary-page">
-    <!-- 日记列表 -->
+    <AppNavBar title="日记" />
+    <view class="couple-strip">
+      <view class="avatar-group">
+        <image class="strip-avatar" :src="userStore.userInfo?.avatar || '/static/default-avatar.svg'" mode="aspectFill" />
+        <image class="strip-avatar strip-avatar--second" :src="userStore.coupleInfo?.partner?.avatar || '/static/default-avatar.svg'" mode="aspectFill" />
+      </view>
+      <view class="strip-copy">
+        <text class="strip-title">我们的日常</text>
+        <text class="strip-subtitle">把今天也轻轻收藏起来</text>
+      </view>
+    </view>
+    <SegmentTabs v-model="activeFilter" :items="filterTabs" />
+
     <scroll-view 
       scroll-y 
       class="diary-list"
       @scrolltolower="loadMore"
     >
-      <view v-for="diary in diaryList" :key="diary.id" class="diary-card" @click="viewDiary(diary)">
-        <!-- 作者信息 -->
+      <view v-for="diary in filteredDiaries" :key="diary.id" class="diary-card" @click="viewDiary(diary)">
         <view class="diary-header">
           <image class="author-avatar" :src="diary.author?.avatar || '/static/default-avatar.png'" />
           <view class="author-info">
@@ -18,10 +29,8 @@
           <text v-if="diary.isOwner" class="edit-btn" @click.stop="editDiary(diary)">编辑</text>
         </view>
         
-        <!-- 内容 -->
         <text class="diary-content">{{ diary.content }}</text>
         
-        <!-- 图片 -->
         <view v-if="diary.images?.length" class="diary-images">
           <image 
             v-for="(img, index) in diary.images.slice(0, 9)" 
@@ -34,12 +43,10 @@
           />
         </view>
         
-        <!-- 位置 -->
         <view v-if="diary.locationName" class="diary-location">
           <text>📍 {{ diary.locationName }}</text>
         </view>
         
-        <!-- 互动 -->
         <view class="diary-actions">
           <view class="action-item" @click="toggleLike(diary)">
             <text class="action-icon">{{ diary.isLiked ? '❤️' : '🤍' }}</text>
@@ -52,35 +59,52 @@
         </view>
       </view>
       
-      <view v-if="diaryList.length === 0" class="empty-state">
-        <text class="empty-icon">📝</text>
-        <text class="empty-text">还没有日记哦</text>
-        <text class="empty-tip">快去记录第一篇回忆吧~</text>
-      </view>
+      <EmptyState
+        v-if="filteredDiaries.length === 0 && !loading"
+        icon="▤"
+        title="还没有日记"
+        desc="写下第一段今天的心情。"
+      />
       
       <view v-if="loading" class="loading-tip">
         <text>加载中...</text>
       </view>
     </scroll-view>
     
-    <!-- 发布按钮 -->
-    <view class="fab-btn" @click="goEdit">
-      <text>✏️</text>
-    </view>
+    <AppFab icon="+" @click="goEdit" />
+    <AppTabBar current="/pages/diary/index" />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { diaryApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import AppFab from '@/components/AppFab.vue'
+import AppNavBar from '@/components/AppNavBar.vue'
+import AppTabBar from '@/components/AppTabBar.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import SegmentTabs from '@/components/SegmentTabs.vue'
 
 const userStore = useUserStore()
 const diaryList = ref<any[]>([])
 const loading = ref(false)
 const page = ref(1)
 const hasMore = ref(true)
+const activeFilter = ref('all')
+
+const filterTabs = [
+  { label: '全部', value: 'all' },
+  { label: '我的', value: 'mine' },
+  { label: '有图', value: 'image' }
+]
+
+const filteredDiaries = computed(() => {
+  if (activeFilter.value === 'mine') return diaryList.value.filter(item => item.isOwner)
+  if (activeFilter.value === 'image') return diaryList.value.filter(item => item.images?.length)
+  return diaryList.value
+})
 
 const moodMap: Record<string, string> = {
   happy: '😊',
@@ -198,6 +222,7 @@ const viewDiary = (diary: any) => {
 // 已移除冗余的 onMounted，所有加载逻辑在 onShow 中异步顺序执行
 
 onShow(async () => {
+  uni.hideTabBar()
   // 强制同步用户信息后再加载，解决解绑残留或加载失败问题
   await userStore.fetchUserInfo()
   loadDiaries(true)
@@ -207,27 +232,78 @@ onShow(async () => {
 <style scoped>
 .diary-page {
   min-height: 100vh;
-  background: #F5F5F5;
-  padding-bottom: 120rpx;
+  background: #F7F5F3;
+  padding-bottom: 164rpx;
+}
+
+.couple-strip {
+  display: flex;
+  align-items: center;
+  margin: 24rpx 32rpx 20rpx;
+  padding: 28rpx 30rpx;
+  border-radius: 28rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.05);
+}
+
+.avatar-group {
+  width: 116rpx;
+  display: flex;
+  align-items: center;
+}
+
+.strip-avatar {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  border: 4rpx solid #FFFFFF;
+  background: #F7F5F3;
+  box-shadow: 0 4rpx 12rpx rgba(28, 27, 46, 0.08);
+}
+
+.strip-avatar--second {
+  margin-left: -20rpx;
+}
+
+.strip-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.strip-title {
+  display: block;
+  font-size: 32rpx;
+  line-height: 40rpx;
+  font-weight: 600;
+  color: #1C1B2E;
+}
+
+.strip-subtitle {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #8A8A9A;
 }
 
 .diary-list {
-  height: 100vh;
+  height: calc(100vh - 230rpx);
+  margin-top: 20rpx;
 }
 
 .diary-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  margin: 32rpx;
-  border-radius: 32rpx;
-  padding: 36rpx;
-  box-shadow: 0 16rpx 48rpx rgba(255, 107, 157, 0.08);
+  background: #FFFFFF;
+  margin: 24rpx 32rpx;
+  border-radius: 28rpx;
+  padding: 30rpx 32rpx;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
   transition: all 0.2s ease;
 }
 
 .diary-card:active {
   transform: scale(0.98);
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.04);
+  box-shadow: 0 8rpx 24rpx rgba(28, 27, 46, 0.08);
 }
 
 .diary-header {
@@ -251,13 +327,13 @@ onShow(async () => {
   display: block;
   font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 8rpx;
 }
 
 .diary-time {
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .mood-icon {
@@ -267,7 +343,7 @@ onShow(async () => {
 
 .diary-content {
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
   line-height: 1.6;
   margin-bottom: 24rpx;
 }
@@ -294,7 +370,7 @@ onShow(async () => {
 
 .diary-location {
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
   margin-bottom: 24rpx;
 }
 
@@ -309,14 +385,14 @@ onShow(async () => {
   align-items: center;
   margin-right: 48rpx;
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
   padding: 8rpx 16rpx;
   border-radius: 32rpx;
   transition: background-color 0.2s;
 }
 
 .action-item:active {
-  background: #FFF5F7;
+  background: #FEF0F2;
 }
 
 .action-icon {
@@ -324,57 +400,19 @@ onShow(async () => {
   font-size: 32rpx;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
-}
-
-.empty-icon {
-  font-size: 100rpx;
-  margin-bottom: 24rpx;
-}
-
-.empty-text {
-  font-size: 32rpx;
-  color: #333;
-  margin-bottom: 16rpx;
-}
-
-.empty-tip {
-  font-size: 26rpx;
-  color: #999;
-}
-
 .loading-tip {
   text-align: center;
   padding: 32rpx;
-  color: #999;
+  color: #8A8A9A;
   font-size: 26rpx;
-}
-
-.fab-btn {
-  position: fixed;
-  right: 40rpx;
-  bottom: 160rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40rpx;
-  box-shadow: 0 8rpx 24rpx rgba(255, 107, 157, 0.4);
 }
 
 .edit-btn {
   margin-left: 16rpx;
   padding: 8rpx 20rpx;
-  background: #FFE4EC;
+  background: #FEF0F2;
   border-radius: 20rpx;
   font-size: 24rpx;
-  color: #FF6B9D;
+  color: #E8637A;
 }
 </style>

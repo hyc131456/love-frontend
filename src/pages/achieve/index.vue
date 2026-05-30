@@ -1,5 +1,7 @@
-<template>
+﻿<template>
   <view class="achieve-page">
+    <AppNavBar title="成就墙" back />
+
     <!-- 亲密值卡片 -->
     <view class="intimacy-card">
       <text class="level-icon">{{ levelIcon }}</text>
@@ -99,14 +101,15 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { achievementApi, coupleApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import AppNavBar from '@/components/AppNavBar.vue'
 
 const userStore = useUserStore()
 
 // 等级定义
 const levels = [
-  { level: 1, name: '热恋期', icon: '💕', min: 0, max: 100 },
-  { level: 2, name: '稳定期', icon: '💖', min: 101, max: 300 },
-  { level: 3, name: '老夫老妻', icon: '💝', min: 301, max: 500 },
+  { level: 1, name: '热恋期', icon: '💄', min: 0, max: 100 },
+  { level: 2, name: '稳定期', icon: '💅', min: 101, max: 300 },
+  { level: 3, name: '老夫老妻', icon: '💐', min: 301, max: 500 },
   { level: 4, name: '灵魂伴侣', icon: '👑', min: 501, max: 9999 }
 ]
 
@@ -209,18 +212,18 @@ onShow(async () => {
 <style scoped>
 .achieve-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #F7F5F3;
   padding-bottom: 40rpx;
 }
 
 .intimacy-card {
-  background: linear-gradient(135deg, #FF6B9D, #C44569);
+  background: linear-gradient(160deg, #E8637A 0%, #9B8EC4 100%);
   margin: 24rpx;
-  border-radius: 24rpx;
+  border-radius: 32rpx;
   padding: 48rpx;
   text-align: center;
   color: #fff;
-  box-shadow: 0 8rpx 32rpx rgba(255, 107, 157, 0.3);
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.26);
 }
 
 .level-icon {
@@ -282,8 +285,10 @@ onShow(async () => {
 .badges-section, .rules-section {
   margin: 24rpx;
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 32rpx;
   padding: 32rpx;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .section-header {
@@ -297,12 +302,12 @@ onShow(async () => {
   display: block;
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .badge-counter {
   font-size: 26rpx;
-  color: #FF6B9D;
+  color: #E8637A;
   font-weight: 500;
 }
 
@@ -317,7 +322,7 @@ onShow(async () => {
 .group-label {
   display: block;
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
   margin-bottom: 16rpx;
   padding-left: 4rpx;
 }
@@ -335,7 +340,7 @@ onShow(async () => {
   align-items: center;
   padding: 24rpx 8rpx;
   border-radius: 16rpx;
-  background: #F8F8F8;
+  background: #F7F5F3;
   position: relative;
   transition: transform 0.2s ease;
 }
@@ -345,8 +350,8 @@ onShow(async () => {
 }
 
 .badge-item.unlocked {
-  background: linear-gradient(135deg, #FFF5F7, #FFE8EE);
-  box-shadow: 0 4rpx 12rpx rgba(255, 107, 157, 0.1);
+  background: #FEF0F2;
+  box-shadow: 0 4rpx 12rpx rgba(232, 99, 122, 0.1);
 }
 
 .badge-item.is-new::after {
@@ -379,7 +384,7 @@ onShow(async () => {
 
 .badge-name {
   font-size: 22rpx;
-  color: #333;
+  color: #1C1B2E;
   text-align: center;
 }
 
@@ -389,7 +394,7 @@ onShow(async () => {
 
 .badge-date {
   font-size: 18rpx;
-  color: #999;
+  color: #8A8A9A;
   margin-top: 4rpx;
 }
 
@@ -401,20 +406,20 @@ onShow(async () => {
 .rules-hint {
   display: block;
   font-size: 22rpx;
-  color: #FF6B9D;
+  color: #E8637A;
   margin-bottom: 16rpx;
   margin-top: -8rpx;
 }
 
 .rule-list {
-  border-top: 1rpx solid #F5F5F5;
+  border-top: 1rpx solid #F7F5F3;
 }
 
 .rule-item {
   display: flex;
   justify-content: space-between;
   padding: 24rpx 0;
-  border-bottom: 1rpx solid #F5F5F5;
+  border-bottom: 1rpx solid #F7F5F3;
 }
 
 .rule-item:last-child {
@@ -423,12 +428,13 @@ onShow(async () => {
 
 .rule-action {
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .rule-score {
   font-size: 28rpx;
-  color: #FF6B9D;
+  color: #E8637A;
   font-weight: 500;
 }
 </style>
+

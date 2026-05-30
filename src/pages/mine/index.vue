@@ -1,6 +1,7 @@
 <template>
   <view class="mine-page">
     <view class="user-card">
+      <view class="profile-title">我的</view>
       <image class="avatar" :src="userInfo?.avatar || '/static/default-avatar.svg'" />
       <view class="user-info">
         <text class="nickname">{{ userInfo?.nickname || '未登录' }}</text>
@@ -78,7 +79,7 @@
           <text class="menu-text">消息通知</text>
           <text class="menu-subtext">控制首页纪念日提醒卡片显示</text>
         </view>
-        <switch :checked="enableNotification" color="#FF6B9D" @change="toggleNotification" />
+        <switch :checked="enableNotification" color="#E8637A" @change="toggleNotification" />
       </view>
       <view class="menu-item" @click="showAbout">
         <text class="menu-icon">ℹ️</text>
@@ -91,9 +92,8 @@
       <button class="btn-logout" @click="logout">退出登录</button>
     </view>
 
-    <view v-if="showEditModal" class="modal-mask" @click="closeEditModal">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">编辑资料</text>
+    <AppSheet :open="showEditModal" title="编辑资料" @close="closeEditModal">
+      <scroll-view scroll-y class="sheet-scroll">
 
         <view class="edit-avatar-section" @click="chooseAvatar">
           <image class="edit-avatar" :src="editForm.avatar || '/static/default-avatar.svg'" />
@@ -123,9 +123,11 @@
           </picker>
         </view>
 
-        <button class="btn-primary" @click="saveProfile">保存</button>
-      </view>
-    </view>
+      </scroll-view>
+      <button class="btn-primary" @click="saveProfile">保存</button>
+    </AppSheet>
+
+    <AppTabBar current="/pages/mine/index" />
   </view>
 </template>
 
@@ -134,6 +136,8 @@ import { computed, ref, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { achievementApi, coupleApi, diaryApi, uploadApi, userApi, wishApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import AppSheet from '@/components/AppSheet.vue'
+import AppTabBar from '@/components/AppTabBar.vue'
 
 const today = new Date().toISOString().split('T')[0]
 const userStore = useUserStore()
@@ -342,6 +346,7 @@ const loadStats = async () => {
 }
 
 const refreshPage = async () => {
+  uni.hideTabBar()
   await userStore.fetchUserInfo()
   await loadStats()
 }
@@ -352,26 +357,40 @@ onShow(refreshPage)
 <style scoped>
 .mine-page {
   min-height: 100vh;
-  background: #f5f5f5;
-  padding-bottom: 120rpx;
+  background: #F7F5F3;
+  padding-bottom: 164rpx;
 }
 
 .user-card {
+  position: relative;
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e9e 100%);
+  background: linear-gradient(160deg, #FDE8EC 0%, #F3EEFF 58%, #E8F4FF 100%);
   padding: 60rpx 40rpx 80rpx;
   padding-top: 120rpx;
-  border-bottom-left-radius: 48rpx;
-  border-bottom-right-radius: 48rpx;
+  border-bottom-left-radius: 40rpx;
+  border-bottom-right-radius: 40rpx;
+}
+
+.profile-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 54rpx;
+  text-align: center;
+  font-size: 34rpx;
+  line-height: 44rpx;
+  font-weight: 600;
+  color: #1C1B2E;
 }
 
 .avatar {
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  border: 4rpx solid rgba(255, 255, 255, 0.5);
+  border: 6rpx solid #FFFFFF;
   background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8rpx 24rpx rgba(28, 27, 46, 0.12);
 }
 
 .user-info {
@@ -383,31 +402,32 @@ onShow(refreshPage)
   display: block;
   font-size: 36rpx;
   font-weight: 600;
-  color: #fff;
+  color: #1C1B2E;
   margin-bottom: 8rpx;
 }
 
 .role {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.82);
+  color: #5B5A6D;
 }
 
 .edit-btn {
   padding: 12rpx 24rpx;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1rpx solid rgba(232, 99, 122, 0.14);
   border-radius: 24rpx;
   font-size: 24rpx;
-  color: #fff;
+  color: #E8637A;
 }
 
 .stats-card {
   display: flex;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
+  background: #FFFFFF;
   margin: -60rpx 32rpx 32rpx;
   border-radius: 32rpx;
   padding: 36rpx 24rpx;
-  box-shadow: 0 16rpx 48rpx rgba(255, 107, 157, 0.15);
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 8rpx 28rpx rgba(28, 27, 46, 0.08);
   position: relative;
   z-index: 10;
 }
@@ -432,14 +452,14 @@ onShow(refreshPage)
   display: block;
   font-size: 44rpx;
   font-weight: 700;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 12rpx;
   font-family: monospace;
 }
 
 .stat-label {
   font-size: 24rpx;
-  color: #888;
+  color: #8A8A9A;
   font-weight: 500;
 }
 
@@ -448,7 +468,8 @@ onShow(refreshPage)
   margin: 0 32rpx 32rpx;
   border-radius: 32rpx;
   overflow: hidden;
-  box-shadow: 0 16rpx 48rpx rgba(255, 107, 157, 0.05);
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.05);
 }
 
 .menu-item {
@@ -459,7 +480,7 @@ onShow(refreshPage)
 }
 
 .menu-item:active {
-  background-color: #fff5f7;
+  background-color: #FEF0F2;
 }
 
 .menu-item:last-child {
@@ -478,14 +499,14 @@ onShow(refreshPage)
 .menu-text {
   flex: 1;
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .menu-subtext {
   display: block;
   margin-top: 6rpx;
   font-size: 22rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .menu-arrow {
@@ -501,37 +522,14 @@ onShow(refreshPage)
   width: 100%;
   height: 88rpx;
   background: #fff;
-  border: 2rpx solid #ff6b9d;
+  border: 2rpx solid #E8637A;
   border-radius: 44rpx;
-  color: #ff6b9d;
+  color: #E8637A;
   font-size: 30rpx;
 }
 
-.modal-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-}
-
-.modal-content {
-  width: 85%;
-  max-width: 85%;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 48rpx;
-  box-sizing: border-box;
-}
-
-.modal-title {
-  display: block;
-  font-size: 34rpx;
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 32rpx;
+.sheet-scroll {
+  max-height: 58vh;
 }
 
 .edit-avatar-section {
@@ -550,14 +548,15 @@ onShow(refreshPage)
 
 .edit-avatar-tip {
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .input {
   width: 100%;
   height: 88rpx;
-  background: #f8f8f8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 0 24rpx;
   font-size: 28rpx;
   margin-bottom: 24rpx;
@@ -571,7 +570,7 @@ onShow(refreshPage)
 .section-label {
   display: block;
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 16rpx;
 }
 
@@ -586,20 +585,21 @@ onShow(refreshPage)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f8f8;
+  background: #F7F5F3;
   border-radius: 16rpx;
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
 }
 
 .gender-item.active {
-  background: #ffe4ec;
-  color: #ff6b9d;
+  background: #FEF0F2;
+  color: #E8637A;
 }
 
 .date-picker-wrapper {
-  background: #f8f8f8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 0 24rpx;
   margin-bottom: 24rpx;
 }
@@ -613,19 +613,19 @@ onShow(refreshPage)
 
 .date-label {
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .date-value {
   font-size: 28rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .btn-primary {
   width: 100%;
   height: 88rpx;
   line-height: 88rpx;
-  background: linear-gradient(135deg, #ff6b9d 0%, #ff8e9e 100%);
+  background: #E8637A;
   border-radius: 44rpx;
   color: #fff;
   font-size: 32rpx;

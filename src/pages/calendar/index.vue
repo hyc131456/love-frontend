@@ -1,29 +1,36 @@
 <template>
   <view class="calendar-page">
-    <view class="month-picker">
-      <view class="arrow" @click="changeMonth(-1)">&lt;</view>
-      <text class="month-text">{{ currentYear }}年{{ currentMonth }}月</text>
-      <view class="arrow" @click="changeMonth(1)">&gt;</view>
-    </view>
+    <AppNavBar title="日历" />
 
-    <view class="week-header">
-      <text v-for="day in weekDays" :key="day" class="week-day">{{ day }}</text>
-    </view>
+    <view class="calendar-card">
+      <view class="month-picker">
+        <view class="arrow" @click="changeMonth(-1)">‹</view>
+        <view class="month-copy">
+          <text class="month-text">{{ currentYear }}年{{ currentMonth }}月</text>
+          <text class="month-subtitle">记录约会、生日和小计划</text>
+        </view>
+        <view class="arrow" @click="changeMonth(1)">›</view>
+      </view>
 
-    <view class="calendar-grid">
-      <view
-        v-for="(day, index) in calendarDays"
-        :key="index"
-        class="day-cell"
-        :class="{
-          'other-month': !day.isCurrentMonth,
-          today: day.isToday,
-          selected: day.dateStr === selectedDate
-        }"
-        @click="selectDate(day)"
-      >
-        <text class="day-num">{{ day.day }}</text>
-        <view v-if="day.hasEvent" class="event-dot"></view>
+      <view class="week-header">
+        <text v-for="day in weekDays" :key="day" class="week-day">{{ day }}</text>
+      </view>
+
+      <view class="calendar-grid">
+        <view
+          v-for="(day, index) in calendarDays"
+          :key="index"
+          class="day-cell"
+          :class="{
+            'other-month': !day.isCurrentMonth,
+            today: day.isToday,
+            selected: day.dateStr === selectedDate
+          }"
+          @click="selectDate(day)"
+        >
+          <text class="day-num">{{ day.day }}</text>
+          <view v-if="day.hasEvent" class="event-dot"></view>
+        </view>
       </view>
     </view>
 
@@ -43,9 +50,7 @@
           </view>
 
           <view class="event-body">
-            <view class="event-head">
-              <text class="event-title" :class="{ done: event.status === 1 }">{{ event.title }}</text>
-            </view>
+            <text class="event-title" :class="{ done: event.status === 1 }">{{ event.title }}</text>
 
             <view class="event-meta">
               <text
@@ -76,9 +81,7 @@
             >
               完成
             </view>
-            <view class="action-btn action-btn--delete" @click.stop="deleteEvent(event.id)">
-              删除
-            </view>
+            <view class="action-btn action-btn--delete" @click.stop="deleteEvent(event.id)">删除</view>
           </view>
         </view>
 
@@ -89,56 +92,54 @@
       </scroll-view>
     </view>
 
-    <view v-if="showEventModal" class="modal-mask" @click="closeEventModal">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">添加事件</text>
+    <AppSheet :open="showEventModal" title="添加事件" @close="closeEventModal">
+      <scroll-view scroll-y class="modal-scroll">
+        <input v-model="newEvent.title" class="input" placeholder="事件标题" />
 
-        <scroll-view scroll-y class="modal-scroll">
-          <input v-model="newEvent.title" class="input" placeholder="事件标题" />
+        <view class="type-selector">
+          <view
+            v-for="type in eventTypes"
+            :key="type.value"
+            class="type-item"
+            :class="{ active: newEvent.type === type.value }"
+            @click="newEvent.type = type.value"
+          >
+            <text class="type-item__icon">{{ type.icon }}</text>
+            <text class="type-item__label">{{ type.label }}</text>
+          </view>
+        </view>
 
-          <view class="type-selector">
-            <view
-              v-for="type in eventTypes"
-              :key="type.value"
-              class="type-item"
-              :class="{ active: newEvent.type === type.value }"
-              @click="newEvent.type = type.value"
-            >
-              <text class="type-item__icon">{{ type.icon }}</text>
-              <text class="type-item__label">{{ type.label }}</text>
-            </view>
+        <view class="form-card">
+          <view class="form-row">
+            <text class="form-label">全天事件</text>
+            <switch :checked="newEvent.isAllDay === 1" color="#E8637A" @change="toggleAllDay" />
           </view>
 
-          <view class="form-card">
-            <view class="form-row">
-              <text class="form-label">全天事件</text>
-              <switch :checked="newEvent.isAllDay === 1" color="#FF6B9D" @change="toggleAllDay" />
+          <picker v-if="newEvent.isAllDay === 0" mode="time" :value="newEvent.eventTime" @change="onEventTimeChange">
+            <view class="form-row form-row--picker">
+              <text class="form-label">事件时间</text>
+              <text class="form-value" :class="{ 'form-value--placeholder': !newEvent.eventTime }">
+                {{ newEvent.eventTime || '选择时间' }}
+              </text>
             </view>
+          </picker>
 
-            <picker v-if="newEvent.isAllDay === 0" mode="time" :value="newEvent.eventTime" @change="onEventTimeChange">
-              <view class="form-row form-row--picker">
-                <text class="form-label">事件时间</text>
-                <text class="form-value" :class="{ 'form-value--placeholder': !newEvent.eventTime }">
-                  {{ newEvent.eventTime || '选择时间' }}
-                </text>
-              </view>
-            </picker>
-
-            <view class="form-block">
-              <text class="form-label">备注</text>
-              <textarea
-                v-model="newEvent.note"
-                class="textarea"
-                placeholder="这件事想补充点什么（可选）"
-                maxlength="200"
-              />
-            </view>
+          <view class="form-block">
+            <text class="form-label">备注</text>
+            <textarea
+              v-model="newEvent.note"
+              class="textarea"
+              placeholder="这件事想补充点什么（可选）"
+              maxlength="200"
+            />
           </view>
-        </scroll-view>
+        </view>
+      </scroll-view>
 
-        <button class="btn-primary" @click="addEvent">保存事件</button>
-      </view>
-    </view>
+      <button class="btn-primary" @click="addEvent">保存事件</button>
+    </AppSheet>
+
+    <AppTabBar current="/pages/calendar/index" />
   </view>
 </template>
 
@@ -147,6 +148,9 @@ import { onMounted, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { calendarApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import AppNavBar from '@/components/AppNavBar.vue'
+import AppSheet from '@/components/AppSheet.vue'
+import AppTabBar from '@/components/AppTabBar.vue'
 
 type EventTypeMeta = {
   value: string
@@ -189,14 +193,14 @@ const userStore = useUserStore()
 
 const weekDays = ['日', '一', '二', '三', '四', '五', '六']
 const eventTypes: EventTypeMeta[] = [
-  { value: 'anniversary', label: '纪念日', icon: '💖', color: '#FF6B9D' },
-  { value: 'todo', label: '待办', icon: '✅', color: '#4A90D9' },
-  { value: 'date', label: '约会', icon: '🥂', color: '#FF8A65' },
+  { value: 'anniversary', label: '纪念日', icon: '♡', color: '#E8637A' },
+  { value: 'todo', label: '待办', icon: '✓', color: '#4A90D9' },
+  { value: 'date', label: '约会', icon: '🎬', color: '#FF8A65' },
   { value: 'birthday', label: '生日', icon: '🎂', color: '#F4B740' },
-  { value: 'travel', label: '旅行', icon: '✈️', color: '#2EC4B6' },
-  { value: 'recipe', label: '菜谱', icon: '🍳', color: '#F39C12' },
-  { value: 'diary', label: '日记', icon: '📝', color: '#9B59B6' },
-  { value: 'period', label: '姨妈期', icon: '🌙', color: '#FF8FA3' }
+  { value: 'travel', label: '旅行', icon: '✈', color: '#2EC4B6' },
+  { value: 'recipe', label: '菜谱', icon: '🍳', color: '#F5A623' },
+  { value: 'diary', label: '日记', icon: '▤', color: '#9B8EC4' },
+  { value: 'period', label: '经期', icon: '☾', color: '#C97C8E' }
 ]
 
 const eventTypeMap = eventTypes.reduce<Record<string, EventTypeMeta>>((map, item) => {
@@ -242,7 +246,7 @@ const toRgba = (hex: string, alpha: number) => {
       : normalized
 
   if (!/^[0-9a-fA-F]{6}$/.test(fullHex)) {
-    return `rgba(255, 107, 157, ${alpha})`
+    return `rgba(232, 99, 122, ${alpha})`
   }
 
   const red = Number.parseInt(fullHex.slice(0, 2), 16)
@@ -255,8 +259,8 @@ const getEventBadge = (event: CalendarEvent) => {
   if (event.status === 1) {
     return {
       label: '已完成',
-      color: '#27AE60',
-      background: '#EEF9F1',
+      color: '#4CAF50',
+      background: '#F0FFF4',
       borderColor: '#D7EFDF'
     }
   }
@@ -462,7 +466,7 @@ const deleteEvent = (id: number) => {
   uni.showModal({
     title: '确认删除',
     content: '删除后将无法恢复，确定继续吗？',
-    confirmColor: '#FF5D73',
+    confirmColor: '#E75B65',
     success: async res => {
       if (!res.confirm) return
 
@@ -483,6 +487,7 @@ onMounted(() => {
 })
 
 onShow(async () => {
+  uni.hideTabBar()
   await userStore.fetchUserInfo()
   await Promise.all([loadMonthEvents(), loadDayEvents()])
 })
@@ -491,15 +496,25 @@ onShow(async () => {
 <style scoped>
 .calendar-page {
   min-height: 100vh;
-  background: #fff7fa;
-  padding-bottom: 120rpx;
+  background: #F7F5F3;
+  padding-bottom: 164rpx;
+}
+
+.calendar-card {
+  margin: 24rpx 32rpx;
+  border-radius: 30rpx;
+  overflow: hidden;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .month-picker {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 32rpx;
+  justify-content: space-between;
+  padding: 28rpx 26rpx 18rpx;
+  background: #FFFFFF;
 }
 
 .arrow {
@@ -508,34 +523,49 @@ onShow(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36rpx;
-  color: #666;
+  font-size: 44rpx;
+  color: #1C1B2E;
+}
+
+.month-copy {
+  flex: 1;
+  text-align: center;
 }
 
 .month-text {
-  margin: 0 32rpx;
+  display: block;
   font-size: 34rpx;
+  line-height: 42rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
+}
+
+.month-subtitle {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #8A8A9A;
 }
 
 .week-header {
   display: flex;
-  padding: 0 16rpx;
+  padding: 8rpx 16rpx 0;
+  background: #FFFFFF;
 }
 
 .week-day {
   flex: 1;
-  padding: 16rpx 0;
+  padding: 14rpx 0;
   text-align: center;
-  font-size: 26rpx;
-  color: #999;
+  font-size: 24rpx;
+  color: #8A8A9A;
 }
 
 .calendar-grid {
   display: flex;
   flex-wrap: wrap;
-  padding: 0 16rpx;
+  padding: 0 16rpx 18rpx;
+  background: #FFFFFF;
 }
 
 .day-cell {
@@ -549,42 +579,46 @@ onShow(async () => {
 }
 
 .day-num {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx;
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .day-cell.other-month .day-num {
-  color: #d0d0d0;
+  color: #D0D0D8;
 }
 
-.day-cell.today {
-  background: #ffe7ef;
-  border-radius: 24rpx;
-}
-
-.day-cell.selected {
-  background: #ff6b9d;
-  border-radius: 24rpx;
+.day-cell.today .day-num {
+  background: #FEF0F2;
+  color: #E8637A;
 }
 
 .day-cell.selected .day-num {
-  color: #fff;
+  background: #E8637A;
+  color: #FFFFFF;
 }
 
 .event-dot {
   position: absolute;
-  bottom: 10rpx;
+  bottom: 8rpx;
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background: #ff6b9d;
+  background: #E8637A;
 }
 
 .events-section {
   margin: 32rpx;
   padding: 32rpx;
-  border-radius: 24rpx;
-  background: #fff;
+  border-radius: 28rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .section-header {
@@ -604,14 +638,14 @@ onShow(async () => {
   display: block;
   font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .section-subtitle {
   display: block;
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .add-btn {
@@ -621,8 +655,8 @@ onShow(async () => {
   line-height: 56rpx;
   text-align: center;
   font-size: 24rpx;
-  color: #ff6b9d;
-  background: #fff1f5;
+  color: #E8637A;
+  background: #FEF0F2;
   border-radius: 999rpx;
 }
 
@@ -634,7 +668,7 @@ onShow(async () => {
   display: flex;
   align-items: stretch;
   padding: 22rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  border-bottom: 1rpx solid #F1F0F3;
 }
 
 .event-item:last-child {
@@ -650,8 +684,8 @@ onShow(async () => {
   align-items: center;
   justify-content: center;
   border-radius: 18rpx;
-  font-size: 30rpx;
-  color: #fff;
+  font-size: 28rpx;
+  color: #FFFFFF;
 }
 
 .event-body {
@@ -660,12 +694,6 @@ onShow(async () => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-top: 4rpx;
-}
-
-.event-head {
-  display: flex;
-  align-items: flex-start;
 }
 
 .event-title {
@@ -674,11 +702,11 @@ onShow(async () => {
   font-size: 28rpx;
   line-height: 1.4;
   font-weight: 500;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .event-title.done {
-  color: #999;
+  color: #8A8A9A;
   text-decoration: line-through;
 }
 
@@ -702,32 +730,26 @@ onShow(async () => {
   line-height: 1;
 }
 
-.event-badge--done {
-  font-weight: 500;
-}
-
 .event-time,
 .event-repeat {
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .event-note {
   margin-top: 10rpx;
   font-size: 22rpx;
   line-height: 1.6;
-  color: #a0a0a0;
+  color: #8A8A9A;
 }
 
 .event-actions {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
   gap: 10rpx;
   margin-left: 18rpx;
   flex-shrink: 0;
-  padding-bottom: 2rpx;
-  align-self: flex-end;
 }
 
 .action-btn {
@@ -742,13 +764,13 @@ onShow(async () => {
 }
 
 .action-btn--complete {
-  color: #27ae60;
-  background: #eefaf3;
+  color: #2F8E5B;
+  background: #EEF9F3;
 }
 
 .action-btn--delete {
-  color: #ff5d73;
-  background: #fff1f3;
+  color: #E75B65;
+  background: #FEF0F2;
 }
 
 .empty-tip {
@@ -760,7 +782,7 @@ onShow(async () => {
   display: block;
   font-size: 30rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .empty-desc {
@@ -768,35 +790,7 @@ onShow(async () => {
   margin-top: 14rpx;
   font-size: 24rpx;
   line-height: 1.7;
-  color: #999;
-}
-
-.modal-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 99;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.42);
-}
-
-.modal-content {
-  width: 86%;
-  max-width: 86%;
-  padding: 40rpx 32rpx 32rpx;
-  box-sizing: border-box;
-  border-radius: 28rpx;
-  background: #fff;
-}
-
-.modal-title {
-  display: block;
-  margin-bottom: 28rpx;
-  text-align: center;
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #333;
+  color: #8A8A9A;
 }
 
 .modal-scroll {
@@ -810,7 +804,8 @@ onShow(async () => {
   padding: 0 24rpx;
   box-sizing: border-box;
   border-radius: 16rpx;
-  background: #f8f8f8;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
   font-size: 28rpx;
 }
 
@@ -830,11 +825,12 @@ onShow(async () => {
   align-items: center;
   justify-content: center;
   border-radius: 18rpx;
-  background: #f7f7f7;
+  background: #F7F5F3;
 }
 
 .type-item.active {
-  background: #ffe4ec;
+  background: #FEF0F2;
+  color: #E8637A;
 }
 
 .type-item__icon {
@@ -845,14 +841,13 @@ onShow(async () => {
 .type-item__label {
   white-space: nowrap;
   font-size: 22rpx;
-  color: #555;
 }
 
 .form-card {
   margin-top: 24rpx;
   padding: 8rpx 24rpx 24rpx;
   border-radius: 20rpx;
-  background: #faf7f8;
+  background: #F7F5F3;
 }
 
 .form-row {
@@ -863,27 +858,27 @@ onShow(async () => {
 }
 
 .form-row--picker {
-  border-top: 1rpx solid #f0e6ea;
+  border-top: 1rpx solid #EBEBF0;
 }
 
 .form-label {
   font-size: 26rpx;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .form-value {
   font-size: 26rpx;
-  color: #555;
+  color: #5B5A6D;
 }
 
 .form-value--placeholder {
-  color: #bbb;
+  color: #8A8A9A;
 }
 
 .form-block {
   margin-top: 8rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid #f0e6ea;
+  border-top: 1rpx solid #EBEBF0;
 }
 
 .textarea {
@@ -893,7 +888,7 @@ onShow(async () => {
   padding: 20rpx;
   box-sizing: border-box;
   border-radius: 16rpx;
-  background: #fff;
+  background: #FFFFFF;
   font-size: 26rpx;
   line-height: 1.6;
 }
@@ -903,16 +898,13 @@ onShow(async () => {
   height: 88rpx;
   margin-top: 24rpx;
   padding: 0;
-  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  line-height: 1;
-  background: #fff;
-  border: 2rpx solid #ff6b9d;
+  background: #E8637A;
+  border: none;
   border-radius: 44rpx;
-  color: #ff6b9d;
+  color: #FFFFFF;
   font-size: 30rpx;
   font-weight: 500;
 }

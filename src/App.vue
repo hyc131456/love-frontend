@@ -27,27 +27,51 @@ onHide(() => {
 <style>
 /* 全局样式 */
 page {
-  background-color: #FFF9FA;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #F7F5F3;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
   font-size: 28rpx;
-  color: #333333;
+  color: #1C1B2E;
   box-sizing: border-box;
+}
+
+@media screen and (min-width: 480px) {
+  body {
+    margin: 0;
+    background: #ECE8E4;
+  }
+
+  uni-page-body,
+  uni-page,
+  #app {
+    max-width: 390px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: #F7F5F3;
+    box-shadow: 0 0 40px rgba(28, 27, 46, 0.08);
+  }
 }
 
 /* 主色调 */
 :root {
-  --primary-color: #FF6B9D;
-  --primary-light: #FFE4EC;
-  --secondary-color: #9B59B6;
-  --success-color: #27AE60;
-  --warning-color: #F39C12;
-  --error-color: #E74C3C;
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --text-hint: #999999;
-  --bg-color: #FFF9FA;
+  --primary-color: #E8637A;
+  --primary-light: #FEF0F2;
+  --secondary-color: #9B8EC4;
+  --secondary-light: #F3F0FA;
+  --success-color: #4CAF50;
+  --success-light: #F0FFF4;
+  --warning-color: #F5A623;
+  --warning-light: #FFF7E6;
+  --error-color: #E75B65;
+  --text-primary: #1C1B2E;
+  --text-secondary: #5B5A6D;
+  --text-hint: #8A8A9A;
+  --bg-color: #F7F5F3;
   --card-color: #FFFFFF;
-  --border-color: #EEEEEE;
+  --border-color: #EBEBF0;
+  --radius-md: 24rpx;
+  --radius-lg: 32rpx;
+  --shadow-card: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
+  --shadow-float: 0 8rpx 32rpx rgba(232, 99, 122, 0.28);
 }
 
 /* 清除默认样式 */
@@ -64,21 +88,23 @@ view, text, image {
 /* 通用卡片 */
 .card {
   background: #FFFFFF;
-  border-radius: 24rpx;
+  border-radius: 32rpx;
   padding: 32rpx;
   margin: 24rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 /* 主按钮 */
 .btn-primary {
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: #E8637A;
   color: #FFFFFF;
   border: none;
   border-radius: 48rpx;
   padding: 24rpx 48rpx;
   font-size: 32rpx;
   font-weight: 500;
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
 }
 
 .btn-primary:active {
@@ -87,16 +113,16 @@ view, text, image {
 
 /* 输入框 */
 .input {
-  background: #F8F8F8;
-  border: 2rpx solid #EEEEEE;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 24rpx 32rpx;
   font-size: 28rpx;
   width: 100%;
 }
 
 .input:focus {
-  border-color: #FF6B9D;
+  border-color: #E8637A;
 }
 
 /* 文本省略 */

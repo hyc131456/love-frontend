@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view class="couple-page">
     <!-- 自定义返回 -->
     <view class="nav-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
@@ -10,7 +10,7 @@
     <!-- 顶部 -->
     <view class="header">
       <text class="title">情侣配对</text>
-      <text class="subtitle">和TA一起开启甜蜜之旅</text>
+      <text class="subtitle">和 TA 一起开启专属空间</text>
     </view>
     
     <!-- Tab切换 -->
@@ -50,7 +50,7 @@
         
         <view class="actions">
           <button class="btn-copy" @click="handleCopy">复制邀请码</button>
-          <button class="btn-share" open-type="share">分享给TA</button>
+          <button class="btn-share" open-type="share">分享给 TA</button>
         </view>
         
         <text class="tip">等待对方输入邀请码加入...</text>
@@ -69,7 +69,7 @@
         <input 
           v-model="inputCode" 
           class="input-code" 
-          placeholder="请输入6位邀请码"
+          placeholder="请输入 6 位邀请码"
           maxlength="6"
         />
         
@@ -160,7 +160,7 @@ const handleJoin = async () => {
     await coupleApi.join(inputCode.value)
     await userStore.fetchUserInfo()
     
-    uni.showToast({ title: '配对成功！', icon: 'success' })
+    uni.showToast({ title: '配对成功', icon: 'success' })
     
     setTimeout(() => {
       uni.switchTab({ url: '/pages/index/index' })
@@ -181,7 +181,7 @@ const goHome = () => {
 <style scoped>
 .couple-page {
   min-height: 100vh;
-  background: #FFF9FA;
+  background: #F7F5F3;
   padding: 0 40rpx 40rpx;
 }
 
@@ -201,7 +201,7 @@ const goHome = () => {
 
 .back-icon {
   font-size: 60rpx;
-  color: #333;
+  color: #1C1B2E;
   line-height: 1;
   font-weight: 300;
   margin-top: -8rpx;
@@ -216,21 +216,22 @@ const goHome = () => {
   display: block;
   font-size: 44rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 16rpx;
 }
 
 .header .subtitle {
   font-size: 28rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .tabs {
   display: flex;
-  background: #F5F5F5;
+  background: #FFFFFF;
   border-radius: 40rpx;
   padding: 8rpx;
   margin-bottom: 48rpx;
+  border: 1rpx solid #EBEBF0;
 }
 
 .tab {
@@ -238,12 +239,12 @@ const goHome = () => {
   text-align: center;
   padding: 24rpx;
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
   border-radius: 32rpx;
 }
 
 .tab.active {
-  background: #FF6B9D;
+  background: #E8637A;
   color: #fff;
   font-weight: 500;
 }
@@ -252,7 +253,8 @@ const goHome = () => {
   background: #fff;
   border-radius: 32rpx;
   padding: 60rpx 40rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .icon-box {
@@ -265,19 +267,20 @@ const goHome = () => {
   display: block;
   text-align: center;
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
   margin-bottom: 48rpx;
 }
 
 .btn-primary {
   width: 100%;
   height: 88rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8E9E 100%);
+  background: #E8637A;
   border-radius: 44rpx;
   color: #fff;
   font-size: 32rpx;
   font-weight: 500;
   border: none;
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
 }
 
 .code-section {
@@ -286,26 +289,27 @@ const goHome = () => {
 
 .label {
   font-size: 28rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .code-box {
   margin: 32rpx 0;
   padding: 40rpx;
-  background: linear-gradient(135deg, #FFE4EC 0%, #FFF0F5 100%);
+  background: #FEF0F2;
   border-radius: 24rpx;
+  border: 1rpx solid rgba(232, 99, 122, 0.14);
 }
 
 .code {
   font-size: 64rpx;
   font-weight: 600;
   letter-spacing: 16rpx;
-  color: #FF6B9D;
+  color: #E8637A;
 }
 
 .expire {
   font-size: 24rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .actions {
@@ -323,12 +327,12 @@ const goHome = () => {
 }
 
 .btn-copy {
-  background: #F5F5F5;
-  color: #666;
+  background: #F7F5F3;
+  color: #5B5A6D;
 }
 
 .btn-share {
-  background: #FF6B9D;
+  background: #E8637A;
   color: #fff;
 }
 
@@ -337,16 +341,16 @@ const goHome = () => {
   text-align: center;
   margin-top: 48rpx;
   font-size: 26rpx;
-  color: #999;
+  color: #8A8A9A;
 }
 
 .btn-enter {
   width: 100%;
   height: 80rpx;
   background: transparent;
-  border: 2rpx solid #FF6B9D;
+  border: 2rpx solid #E8637A;
   border-radius: 40rpx;
-  color: #FF6B9D;
+  color: #E8637A;
   font-size: 28rpx;
   margin-top: 32rpx;
 }
@@ -354,12 +358,13 @@ const goHome = () => {
 .input-code {
   width: 100%;
   height: 96rpx;
-  background: #F8F8F8;
-  border: 2rpx solid #EEE;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   text-align: center;
   font-size: 40rpx;
   letter-spacing: 24rpx;
   margin-bottom: 48rpx;
 }
 </style>
+

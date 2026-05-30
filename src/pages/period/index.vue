@@ -1,6 +1,7 @@
-<template>
+﻿<template>
   <view class="period-page">
-    <!-- 状态卡片 -->
+    <AppNavBar title="经期助手" back />
+
     <view class="status-card">
       <view v-if="prediction.nextPredictedDate" class="prediction">
         <text class="prediction-label">预计下次经期</text>
@@ -41,16 +42,11 @@
         </view>
       </view>
       
-      <view v-if="records.length === 0" class="empty-state">
-        <text class="empty-icon">🌸</text>
-        <text class="empty-text">暂无记录</text>
-      </view>
+      <EmptyState v-if="records.length === 0" icon="☾" title="暂无记录" />
     </view>
     
-    <!-- 记录弹窗 -->
-    <view v-if="showRecordModal" class="modal-mask" @click="closeModal">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">{{ isEdit ? '编辑记录' : '记录经期' }}</text>
+    <AppSheet :open="showRecordModal" :title="isEdit ? '编辑记录' : '记录经期'" @close="closeModal">
+      <scroll-view scroll-y class="sheet-scroll">
         
         <!-- 开始日期 -->
         <view class="date-field">
@@ -107,9 +103,9 @@
         <!-- 备注 -->
         <textarea v-model="form.note" class="textarea" placeholder="备注（可选）" />
         
-        <button class="btn-primary" @click="saveRecord">保存</button>
-      </view>
-    </view>
+      </scroll-view>
+      <button class="btn-primary" @click="saveRecord">保存</button>
+    </AppSheet>
   </view>
 </template>
 
@@ -117,6 +113,9 @@
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { get, post, put, del } from '@/utils/request'
+import AppNavBar from '@/components/AppNavBar.vue'
+import AppSheet from '@/components/AppSheet.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 const flowOptions = [
   { value: 'light', label: '少量' },
@@ -127,7 +126,7 @@ const flowOptions = [
 const symptomOptions = [
   { value: '腹痛', label: '😣 腹痛' },
   { value: '头痛', label: '🤕 头痛' },
-  { value: '情绪波动', label: '😤 情绪波动' },
+  { value: '情绪波动', label: '😫 情绪波动' },
   { value: '疲劳', label: '😴 疲劳' },
   { value: '恶心', label: '🤢 恶心' }
 ]
@@ -256,17 +255,19 @@ onShow(() => {
 <style scoped>
 .period-page {
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #F7F5F3;
   padding-bottom: 40rpx;
 }
 
 .status-card {
-  background: linear-gradient(135deg, #FFCDD2, #F48FB1);
+  background: linear-gradient(160deg, #FDE8EC 0%, #F3EEFF 58%, #E8F4FF 100%);
   margin: 24rpx;
   border-radius: 24rpx;
   padding: 48rpx 32rpx;
   text-align: center;
-  color: #fff;
+  color: #1C1B2E;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
 }
 
 .prediction-label {
@@ -291,7 +292,7 @@ onShow(() => {
 }
 
 .btn-record {
-  background: rgba(255, 255, 255, 0.3);
+  background: #E8637A;
   border: none;
   color: #fff;
   font-size: 28rpx;
@@ -307,15 +308,17 @@ onShow(() => {
   display: block;
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 20rpx;
 }
 
 .record-card {
   background: #fff;
-  border-radius: 20rpx;
+  border-radius: 28rpx;
   padding: 28rpx;
   margin-bottom: 16rpx;
+  border: 1rpx solid #EBEBF0;
+  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.05);
 }
 
 .record-header {
@@ -328,13 +331,13 @@ onShow(() => {
 .record-dates {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: #1C1B2E;
 }
 
 .record-flow {
   font-size: 24rpx;
-  color: #F48FB1;
-  background: #FFF5F7;
+  color: #E8637A;
+  background: #FEF0F2;
   padding: 4rpx 16rpx;
   border-radius: 16rpx;
 }
@@ -348,15 +351,15 @@ onShow(() => {
 
 .symptom-tag {
   font-size: 22rpx;
-  background: #F5F5F5;
+  background: #F7F5F3;
   padding: 6rpx 16rpx;
   border-radius: 16rpx;
-  color: #666;
+  color: #5B5A6D;
 }
 
 .record-note {
   font-size: 26rpx;
-  color: #999;
+  color: #8A8A9A;
   margin-bottom: 12rpx;
 }
 
@@ -368,51 +371,15 @@ onShow(() => {
 
 .action-link {
   font-size: 26rpx;
-  color: #FF6B9D;
+  color: #E8637A;
 }
 
 .action-link.danger {
   color: #FF4757;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 80rpx 0;
-}
-
-.empty-icon { font-size: 80rpx; margin-bottom: 16rpx; }
-.empty-text { font-size: 28rpx; color: #999; }
-
-/* 弹窗 */
-.modal-mask {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-}
-
-.modal-content {
-  width: 85%;
-  max-height: 80vh;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 40rpx;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-
-.modal-title {
-  display: block;
-  font-size: 34rpx;
-  font-weight: 600;
-  text-align: center;
-  margin-bottom: 32rpx;
-  color: #333;
+.sheet-scroll {
+  max-height: 58vh;
 }
 
 .date-field {
@@ -422,17 +389,18 @@ onShow(() => {
 .field-label {
   display: block;
   font-size: 28rpx;
-  color: #333;
+  color: #1C1B2E;
   margin-bottom: 12rpx;
   font-weight: 500;
 }
 
 .date-picker-display {
   padding: 24rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   font-size: 28rpx;
-  color: #666;
+  color: #5B5A6D;
 }
 
 .field-group {
@@ -447,22 +415,23 @@ onShow(() => {
 
 .type-item {
   padding: 12rpx 24rpx;
-  background: #F5F5F5;
+  background: #F7F5F3;
   border-radius: 28rpx;
   font-size: 24rpx;
-  color: #666;
+  color: #5B5A6D;
 }
 
 .type-item.active {
-  background: #FFE4EC;
-  color: #FF6B9D;
+  background: #FEF0F2;
+  color: #E8637A;
 }
 
 .textarea {
   width: 100%;
   min-height: 100rpx;
-  background: #F8F8F8;
-  border-radius: 16rpx;
+  background: #F7F5F3;
+  border: 2rpx solid #EBEBF0;
+  border-radius: 20rpx;
   padding: 20rpx 24rpx;
   font-size: 28rpx;
   margin-bottom: 32rpx;
@@ -473,10 +442,12 @@ onShow(() => {
   width: 100%;
   height: 88rpx;
   line-height: 88rpx;
-  background: linear-gradient(135deg, #F48FB1, #FF6B9D);
+  background: #E8637A;
   border-radius: 44rpx;
   color: #fff;
   font-size: 32rpx;
   border: none;
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
 }
 </style>
+

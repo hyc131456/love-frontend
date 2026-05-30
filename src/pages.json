@@ -24,108 +24,124 @@
     {
       "path": "pages/calendar/index",
       "style": {
-        "navigationBarTitleText": "日历"
+        "navigationBarTitleText": "日历",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/anniversary/index",
       "style": {
-        "navigationBarTitleText": "纪念日"
+        "navigationBarTitleText": "纪念日",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/diary/index",
       "style": {
-        "navigationBarTitleText": "回忆簿"
+        "navigationBarTitleText": "回忆簿",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/diary/edit",
       "style": {
-        "navigationBarTitleText": "写日记"
+        "navigationBarTitleText": "写日记",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/diary/detail",
       "style": {
-        "navigationBarTitleText": "日记详情"
+        "navigationBarTitleText": "日记详情",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/wish/index",
       "style": {
-        "navigationBarTitleText": "心愿"
+        "navigationBarTitleText": "心愿",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/mine/index",
       "style": {
-        "navigationBarTitleText": "我的"
+        "navigationBarTitleText": "我的",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/saving/index",
       "style": {
-        "navigationBarTitleText": "共同储蓄"
+        "navigationBarTitleText": "共同储蓄",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/saving/detail",
       "style": {
-        "navigationBarTitleText": "储蓄详情"
+        "navigationBarTitleText": "储蓄详情",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/achieve/index",
       "style": {
-        "navigationBarTitleText": "成就墙"
+        "navigationBarTitleText": "成就墙",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/recipe/index",
       "style": {
-        "navigationBarTitleText": "家庭菜谱"
+        "navigationBarTitleText": "家庭菜谱",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/recipe/edit",
       "style": {
-        "navigationBarTitleText": "编辑菜谱"
+        "navigationBarTitleText": "编辑菜谱",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/recipe/detail",
       "style": {
-        "navigationBarTitleText": "菜谱详情"
+        "navigationBarTitleText": "菜谱详情",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/gallery/index",
       "style": {
-        "navigationBarTitleText": "图片库"
+        "navigationBarTitleText": "图片库",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/period/index",
       "style": {
-        "navigationBarTitleText": "姨妈期助手"
+        "navigationBarTitleText": "姨妈期助手",
+        "navigationStyle": "custom"
       }
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "心迹·情侣时光",
-    "navigationBarBackgroundColor": "#FFF9FA",
-    "backgroundColor": "#FFF9FA",
+    "navigationBarTitleText": "心迹 · 情侣时光",
+    "navigationBarBackgroundColor": "#F7F5F3",
+    "backgroundColor": "#F7F5F3",
     "app-plus": {
-      "background": "#FFF9FA"
+      "background": "#F7F5F3"
     }
   },
   "tabBar": {
-    "color": "#B3B3B3",
-    "selectedColor": "#FF6B9D",
+    "color": "#FFFFFF",
+    "selectedColor": "#FFFFFF",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
+    "height": "1px",
     "list": [
       {
         "pagePath": "pages/index/index",
