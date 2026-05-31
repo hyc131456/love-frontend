@@ -1,130 +1,194 @@
 <template>
   <view class="mine-page">
-    <view class="user-card">
-      <view class="profile-title">我的</view>
-      <image class="avatar" :src="userInfo?.avatar || '/static/default-avatar.svg'" />
-      <view class="user-info">
-        <text class="nickname">{{ userInfo?.nickname || '未登录' }}</text>
-        <text class="role">{{ userInfo?.role === 'A' ? '空间创建者' : '空间成员' }}</text>
-      </view>
-      <view class="edit-btn" @click="editProfile">编辑</view>
-    </view>
-
-    <view class="stats-card">
-      <view class="stat-item">
-        <text class="stat-num">{{ coupleInfo?.daysTogether || 0 }}</text>
-        <text class="stat-label">在一起天数</text>
-      </view>
-      <view class="stat-item" @click="goTo('/pages/diary/index')">
-        <text class="stat-num">{{ stats.diaryCount }}</text>
-        <text class="stat-label">日记</text>
-      </view>
-      <view class="stat-item" @click="goTo('/pages/wish/index')">
-        <text class="stat-num">{{ stats.wishCount }}</text>
-        <text class="stat-label">心愿</text>
-      </view>
-      <view class="stat-item" @click="goTo('/pages/achieve/index')">
-        <text class="stat-num">{{ stats.achieveCount }}</text>
-        <text class="stat-label">成就</text>
-      </view>
-    </view>
-
-    <view class="menu-list">
-      <view class="menu-item" @click="goTo('/pages/anniversary/index')">
-        <text class="menu-icon">💖</text>
-        <text class="menu-text">纪念日</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @click="goTo('/pages/gallery/index')">
-        <text class="menu-icon">🖼️</text>
-        <text class="menu-text">图片库</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @click="goTo('/pages/achieve/index')">
-        <text class="menu-icon">🏅</text>
-        <text class="menu-text">成就墙</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @click="goTo('/pages/recipe/index')">
-        <text class="menu-icon">🍳</text>
-        <text class="menu-text">家庭菜谱</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @click="goTo('/pages/saving/index')">
-        <text class="menu-icon">💰</text>
-        <text class="menu-text">共同储蓄</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" @click="goTo('/pages/period/index')">
-        <text class="menu-icon">🌙</text>
-        <text class="menu-text">姨妈期助手</text>
-        <text class="menu-arrow">›</text>
-      </view>
-    </view>
-
-    <view class="menu-list">
-      <view v-if="showInvite" class="menu-item" @click="invitePartner">
-        <text class="menu-icon">🤝</text>
-        <text class="menu-text">邀请 TA</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view v-if="showUnbind" class="menu-item" @click="unbindCouple">
-        <text class="menu-icon">💔</text>
-        <text class="menu-text">解除配对</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item">
-        <text class="menu-icon">🔔</text>
-        <view class="menu-content">
-          <text class="menu-text">消息通知</text>
-          <text class="menu-subtext">控制首页纪念日提醒卡片显示</text>
+    <scroll-view scroll-y class="mine-scroll">
+      <view class="mine-cover">
+        <view class="mine-cover-nav" :style="{ paddingTop: `${statusBarHeight}px` }">
+          <view class="mine-nav-spacer"></view>
+          <text class="mine-nav-title">我的</text>
+          <view class="mine-nav-action" @click="editProfile">⚙</view>
         </view>
-        <switch :checked="enableNotification" color="#E8637A" @change="toggleNotification" />
-      </view>
-      <view class="menu-item" @click="showAbout">
-        <text class="menu-icon">ℹ️</text>
-        <text class="menu-text">关于我们</text>
-        <text class="menu-arrow">›</text>
-      </view>
-    </view>
 
-    <view class="logout-section">
-      <button class="btn-logout" @click="logout">退出登录</button>
-    </view>
+        <text class="mine-heart">💕</text>
+        <view class="mine-avatar-pair" @click="editProfile">
+          <view class="mine-avatar-frame mine-avatar-a">
+            <image class="mine-avatar-img" :src="userInfo?.avatar || '/static/default-avatar.svg'" mode="aspectFill" />
+          </view>
+          <view class="mine-avatar-frame mine-avatar-b">
+            <image class="mine-avatar-img" :src="partnerAvatar" mode="aspectFill" />
+          </view>
+        </view>
+      </view>
+
+      <view class="mine-profile">
+        <text class="mine-profile-name">{{ userInfo?.nickname || '未登录' }}</text>
+        <view class="mine-profile-partner">
+          <template v-if="userInfo?.coupleId">
+            <text>与 </text>
+            <text class="mine-accent">{{ partnerName }}</text>
+            <text> 在一起</text>
+          </template>
+          <text v-else>还没有绑定另一半</text>
+        </view>
+
+        <view class="mine-stats">
+          <view class="mine-stat">
+            <text class="mine-stat-num">{{ coupleInfo?.daysTogether || 0 }}</text>
+            <text class="mine-stat-label">在一起天数</text>
+          </view>
+          <view class="mine-stat" @click="goTo('/pages/diary/index')">
+            <text class="mine-stat-num">{{ stats.diaryCount }}</text>
+            <text class="mine-stat-label">日记篇数</text>
+          </view>
+          <view class="mine-stat" @click="goTo('/pages/wish/index')">
+            <text class="mine-stat-num">{{ stats.wishCount }}</text>
+            <text class="mine-stat-label">心愿数量</text>
+          </view>
+          <view class="mine-stat" @click="goTo('/pages/achieve/index')">
+            <text class="mine-stat-num">{{ stats.achieveCount }}</text>
+            <text class="mine-stat-label">成就徽章</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="mine-section">
+        <text class="mine-section-title">亲密等级</text>
+        <view class="mine-level-row">
+          <text class="mine-level-badge">Lv.{{ currentLevel.level }}</text>
+          <text class="mine-level-name">{{ currentLevel.name }}</text>
+          <text class="mine-level-next" v-if="nextLevelInfo">距{{ nextLevelInfo.name }} {{ nextLevelInfo.gap }} 分</text>
+          <text class="mine-level-next" v-else>已达最高等级</text>
+        </view>
+        <view class="mine-progress">
+          <view class="mine-progress-fill" :style="{ width: `${levelProgress}%` }"></view>
+        </view>
+        <view class="mine-progress-labels">
+          <text>{{ currentLevel.name }} {{ currentLevel.min }}</text>
+          <text>{{ intimacyScore }} / {{ currentLevel.maxLabel }}</text>
+          <text>{{ nextLevelInfo ? `${nextLevelInfo.name} ${nextLevelInfo.min}+` : '满级' }}</text>
+        </view>
+      </view>
+
+      <view class="mine-section" @click="goTo('/pages/achieve/index')">
+        <text class="mine-section-title">成就徽章</text>
+        <view class="mine-badges">
+          <view v-for="badge in displayBadges" :key="badge.key" class="mine-badge">
+            <view class="mine-badge-icon" :class="{ unlocked: badge.unlocked, locked: !badge.unlocked, secondary: badge.secondary }">
+              <text>{{ badge.icon }}</text>
+              <text v-if="badge.unlocked" class="mine-badge-check" :class="{ secondary: badge.secondary }">✓</text>
+            </view>
+            <text class="mine-badge-name" :class="{ locked: !badge.unlocked }">{{ badge.name }}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="mine-menu">
+        <view class="mine-menu-item" @click="goTo('/pages/anniversary/index')">
+          <text class="mine-menu-icon rose">📅</text>
+          <text class="mine-menu-label">纪念日管理</text>
+          <text class="mine-menu-value">{{ stats.anniversaryCount }} 个</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+        <view class="mine-menu-item" @click="goTo('/pages/gallery/index')">
+          <text class="mine-menu-icon lavender">🖼</text>
+          <text class="mine-menu-label">图片库</text>
+          <text class="mine-menu-value">{{ stats.galleryCount }} 张</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+        <view class="mine-menu-item" @click="goTo('/pages/period/index')">
+          <text class="mine-menu-icon cream">🌸</text>
+          <text class="mine-menu-label">姨妈期追踪</text>
+          <text class="mine-menu-value">{{ stats.periodEnabled ? '已开启' : '未开启' }}</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="mine-menu">
+        <view class="mine-menu-item mine-notify-item">
+          <text class="mine-menu-icon green">🔔</text>
+          <view class="mine-menu-main">
+            <text class="mine-menu-label">消息通知</text>
+            <text class="mine-menu-subtext">控制首页纪念日提醒卡片显示</text>
+          </view>
+          <switch :checked="enableNotification" color="#E8637A" @change="toggleNotification" />
+        </view>
+        <view class="mine-menu-item" @click="showPrivacySettings">
+          <text class="mine-menu-icon blue">🔒</text>
+          <text class="mine-menu-label">隐私设置</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+        <view class="mine-menu-item" @click="showFeedback">
+          <text class="mine-menu-icon neutral">💬</text>
+          <text class="mine-menu-label">意见反馈</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="mine-menu mine-menu-secondary">
+        <view class="mine-menu-item" @click="goTo('/pages/recipe/index')">
+          <text class="mine-menu-icon cream">🍳</text>
+          <text class="mine-menu-label">家庭菜谱</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+        <view class="mine-menu-item" @click="goTo('/pages/saving/index')">
+          <text class="mine-menu-icon green">💰</text>
+          <text class="mine-menu-label">共同储蓄</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+        <view class="mine-menu-item" @click="goTo('/pages/achieve/index')">
+          <text class="mine-menu-icon lavender">🏅</text>
+          <text class="mine-menu-label">成就墙</text>
+          <text class="mine-menu-value">{{ stats.achieveCount }} 枚</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+        <view v-if="showInvite" class="mine-menu-item" @click="invitePartner">
+          <text class="mine-menu-icon blue">🤝</text>
+          <text class="mine-menu-label">邀请 TA</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+        <view v-if="showUnbind" class="mine-menu-item" @click="unbindCouple">
+          <text class="mine-menu-icon rose">💔</text>
+          <text class="mine-menu-label danger">解除配对</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+        <view class="mine-menu-item" @click="logout">
+          <text class="mine-menu-icon neutral">↩</text>
+          <text class="mine-menu-label danger">退出登录</text>
+          <text class="mine-menu-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="mine-version">心迹 · 情侣时光 v1.0.0</view>
+    </scroll-view>
 
     <AppSheet :open="showEditModal" title="编辑资料" @close="closeEditModal">
-      <scroll-view scroll-y class="sheet-scroll">
-
-        <view class="edit-avatar-section" @click="chooseAvatar">
-          <image class="edit-avatar" :src="editForm.avatar || '/static/default-avatar.svg'" />
-          <text class="edit-avatar-tip">点击更换头像</text>
+      <scroll-view scroll-y class="mine-sheet-scroll">
+        <view class="mine-edit-avatar" @click="chooseAvatar">
+          <view class="mine-edit-avatar-frame">
+            <image class="mine-avatar-img" :src="editForm.avatar || '/static/default-avatar.svg'" mode="aspectFill" />
+          </view>
+          <text class="mine-edit-avatar-tip">点击更换头像</text>
         </view>
 
-        <input v-model="editForm.nickname" class="input" placeholder="请输入昵称" />
+        <input v-model="editForm.nickname" class="mine-input" placeholder="请输入昵称" />
 
-        <view class="gender-section">
-          <text class="section-label">性别</text>
-          <view class="gender-options">
-            <view class="gender-item" :class="{ active: editForm.gender === 1 }" @click="editForm.gender = 1">
-              👦 男
-            </view>
-            <view class="gender-item" :class="{ active: editForm.gender === 2 }" @click="editForm.gender = 2">
-              👧 女
-            </view>
+        <view class="mine-form-section">
+          <text class="mine-form-label">性别</text>
+          <view class="mine-gender-options">
+            <view class="mine-gender-item" :class="{ active: editForm.gender === 1 }" @click="editForm.gender = 1">👦 男</view>
+            <view class="mine-gender-item" :class="{ active: editForm.gender === 2 }" @click="editForm.gender = 2">👧 女</view>
           </view>
         </view>
 
-        <view class="date-picker-wrapper">
+        <view class="mine-date-wrapper">
           <picker mode="date" :value="editForm.birthday" :end="today" @change="onBirthdayChange">
-            <view class="date-picker-display">
-              <text class="date-label">生日</text>
-              <text class="date-value">{{ editForm.birthday || '选择生日' }}</text>
+            <view class="mine-date-display">
+              <text class="mine-date-label">生日</text>
+              <text class="mine-date-value">{{ editForm.birthday || '选择生日' }}</text>
             </view>
           </picker>
         </view>
-
       </scroll-view>
-      <button class="btn-primary" @click="saveProfile">保存</button>
+      <button class="mine-save-btn" @click="saveProfile">保存</button>
     </AppSheet>
 
     <AppTabBar current="/pages/mine/index" />
@@ -134,16 +198,45 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { achievementApi, coupleApi, diaryApi, uploadApi, userApi, wishApi } from '@/api'
+import {
+  achievementApi,
+  calendarApi,
+  coupleApi,
+  diaryApi,
+  galleryApi,
+  periodApi,
+  uploadApi,
+  userApi,
+  wishApi
+} from '@/api'
 import { useUserStore } from '@/stores/user'
 import AppSheet from '@/components/AppSheet.vue'
 import AppTabBar from '@/components/AppTabBar.vue'
 
 const today = new Date().toISOString().split('T')[0]
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 0)
 const userStore = useUserStore()
 
 const userInfo = computed(() => userStore.userInfo)
 const coupleInfo = computed(() => userStore.coupleInfo)
+const partnerName = computed(() => coupleInfo.value?.partner?.nickname || 'TA')
+const partnerAvatar = computed(() => coupleInfo.value?.partner?.avatar || '/static/default-avatar.svg')
+
+const levels = [
+  { level: 1, name: '热恋期', min: 0, max: 100, maxLabel: 100 },
+  { level: 2, name: '稳定期', min: 101, max: 300, maxLabel: 300 },
+  { level: 3, name: '老夫老妻', min: 301, max: 500, maxLabel: 500 },
+  { level: 4, name: '灵魂伴侣', min: 501, max: 9999, maxLabel: '∞' }
+]
+
+const fallbackBadges = [
+  { key: 'fallback-1', icon: '💑', name: '初心者', unlocked: true, secondary: false },
+  { key: 'fallback-2', icon: '🗓', name: '纪念达人', unlocked: true, secondary: true },
+  { key: 'fallback-3', icon: '📖', name: '日记伙伴', unlocked: true, secondary: false },
+  { key: 'fallback-4', icon: '⭐', name: '坚持之星', unlocked: true, secondary: true },
+  { key: 'fallback-5', icon: '🍳', name: '厨房CP', unlocked: false, secondary: false },
+  { key: 'fallback-6', icon: '🤝', name: '同心协力', unlocked: false, secondary: false }
+]
 
 const showInvite = computed(() => {
   if (!userInfo.value) return false
@@ -153,11 +246,15 @@ const showInvite = computed(() => {
 
 const showUnbind = computed(() => !!userInfo.value?.coupleId && !!coupleInfo.value?.partner)
 const enableNotification = ref(true)
+const allBadges = ref<any[]>([])
 
 const stats = ref({
   diaryCount: 0,
   wishCount: 0,
-  achieveCount: 0
+  achieveCount: 0,
+  anniversaryCount: 0,
+  galleryCount: 0,
+  periodEnabled: false
 })
 
 const showEditModal = ref(false)
@@ -166,6 +263,48 @@ const editForm = ref({
   avatar: '',
   gender: 0,
   birthday: ''
+})
+
+const intimacyScore = computed(() => {
+  const info: any = coupleInfo.value || {}
+  return Number(info.intimacyScore ?? info.intimacyProgress ?? 0)
+})
+
+const currentLevel = computed(() => {
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (intimacyScore.value >= levels[i].min) return levels[i]
+  }
+  return levels[0]
+})
+
+const levelProgress = computed(() => {
+  const level = currentLevel.value
+  if (level.level === 4) return 100
+  const range = level.max - level.min
+  const current = Math.max(0, intimacyScore.value - level.min)
+  return Math.min(100, Math.round((current / range) * 100))
+})
+
+const nextLevelInfo = computed(() => {
+  const index = levels.findIndex(item => item.level === currentLevel.value.level)
+  if (index < 0 || index >= levels.length - 1) return null
+  const next = levels[index + 1]
+  return {
+    name: next.name,
+    min: next.min,
+    gap: Math.max(0, next.min - intimacyScore.value)
+  }
+})
+
+const displayBadges = computed(() => {
+  const mapped = allBadges.value.slice(0, 6).map((badge, index) => ({
+    key: badge.badgeId || badge.id || `badge-${index}`,
+    icon: badge.icon || fallbackBadges[index]?.icon || '🏅',
+    name: badge.badgeName || badge.name || fallbackBadges[index]?.name || '成就徽章',
+    unlocked: !!badge.unlocked,
+    secondary: index % 2 === 1
+  }))
+  return [...mapped, ...fallbackBadges.slice(mapped.length)].slice(0, 6)
 })
 
 watch(
@@ -284,6 +423,27 @@ const unbindCouple = () => {
   })
 }
 
+const showPrivacySettings = () => {
+  if (!showUnbind.value) {
+    uni.showToast({ title: '暂无可调整的隐私设置', icon: 'none' })
+    return
+  }
+  uni.showActionSheet({
+    itemList: ['解除配对'],
+    success: res => {
+      if (res.tapIndex === 0) unbindCouple()
+    }
+  })
+}
+
+const showFeedback = () => {
+  uni.showModal({
+    title: '意见反馈',
+    content: '谢谢你愿意帮我们把心迹变得更好，反馈入口正在准备中。',
+    showCancel: false
+  })
+}
+
 const toggleNotification = async (e: any) => {
   const nextValue = !!e.detail.value
   try {
@@ -295,14 +455,6 @@ const toggleNotification = async (e: any) => {
     enableNotification.value = !nextValue
     console.error('更新通知开关失败', error)
   }
-}
-
-const showAbout = () => {
-  uni.showModal({
-    title: '心迹·情侣时光',
-    content: '版本 1.0.0\n\n专为情侣设计的私密协作小程序，记录爱情，分享时光。',
-    showCancel: false
-  })
 }
 
 const logout = () => {
@@ -321,8 +473,12 @@ const resetStats = () => {
   stats.value = {
     diaryCount: 0,
     wishCount: 0,
-    achieveCount: 0
+    achieveCount: 0,
+    anniversaryCount: 0,
+    galleryCount: 0,
+    periodEnabled: false
   }
+  allBadges.value = []
 }
 
 const loadStats = async () => {
@@ -331,18 +487,41 @@ const loadStats = async () => {
     return
   }
 
-  try {
-    const diaryData = await diaryApi.getList(1, 1000)
-    stats.value.diaryCount = diaryData?.total || diaryData?.list?.length || 0
-
-    const wishData = await wishApi.getList()
-    stats.value.wishCount = wishData?.length || 0
-
-    const achieveData = await achievementApi.getUnlocked()
-    stats.value.achieveCount = achieveData?.length || 0
-  } catch (e) {
-    console.error('加载统计数据失败', e)
+  const safeLoad = async (task: () => Promise<void>, label: string) => {
+    try {
+      await task()
+    } catch (e) {
+      console.error(`${label}失败`, e)
+    }
   }
+
+  await Promise.all([
+    safeLoad(async () => {
+      const diaryData = await diaryApi.getList(1, 1000)
+      stats.value.diaryCount = diaryData?.total || diaryData?.list?.length || 0
+    }, '加载日记统计'),
+    safeLoad(async () => {
+      const wishData = await wishApi.getList()
+      stats.value.wishCount = wishData?.length || 0
+    }, '加载心愿统计'),
+    safeLoad(async () => {
+      const badges = await achievementApi.getAll()
+      allBadges.value = badges || []
+      stats.value.achieveCount = allBadges.value.filter(badge => badge.unlocked).length
+    }, '加载成就统计'),
+    safeLoad(async () => {
+      const anniversaries = await calendarApi.getAnniversaries()
+      stats.value.anniversaryCount = Array.isArray(anniversaries) ? anniversaries.length : 0
+    }, '加载纪念日统计'),
+    safeLoad(async () => {
+      const galleryData = await galleryApi.getList(1, 1000)
+      stats.value.galleryCount = galleryData?.total || galleryData?.list?.length || 0
+    }, '加载图库统计'),
+    safeLoad(async () => {
+      const periods = await periodApi.getList()
+      stats.value.periodEnabled = Array.isArray(periods) && periods.length > 0
+    }, '加载经期状态')
+  ])
 }
 
 const refreshPage = async () => {
@@ -353,282 +532,3 @@ const refreshPage = async () => {
 
 onShow(refreshPage)
 </script>
-
-<style scoped>
-.mine-page {
-  min-height: 100vh;
-  background: #F7F5F3;
-  padding-bottom: 164rpx;
-}
-
-.user-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: linear-gradient(160deg, #FDE8EC 0%, #F3EEFF 58%, #E8F4FF 100%);
-  padding: 60rpx 40rpx 80rpx;
-  padding-top: 120rpx;
-  border-bottom-left-radius: 40rpx;
-  border-bottom-right-radius: 40rpx;
-}
-
-.profile-title {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 54rpx;
-  text-align: center;
-  font-size: 34rpx;
-  line-height: 44rpx;
-  font-weight: 600;
-  color: #1C1B2E;
-}
-
-.avatar {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 50%;
-  border: 6rpx solid #FFFFFF;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8rpx 24rpx rgba(28, 27, 46, 0.12);
-}
-
-.user-info {
-  flex: 1;
-  margin-left: 24rpx;
-}
-
-.nickname {
-  display: block;
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #1C1B2E;
-  margin-bottom: 8rpx;
-}
-
-.role {
-  font-size: 24rpx;
-  color: #5B5A6D;
-}
-
-.edit-btn {
-  padding: 12rpx 24rpx;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1rpx solid rgba(232, 99, 122, 0.14);
-  border-radius: 24rpx;
-  font-size: 24rpx;
-  color: #E8637A;
-}
-
-.stats-card {
-  display: flex;
-  background: #FFFFFF;
-  margin: -60rpx 32rpx 32rpx;
-  border-radius: 32rpx;
-  padding: 36rpx 24rpx;
-  border: 1rpx solid #EBEBF0;
-  box-shadow: 0 8rpx 28rpx rgba(28, 27, 46, 0.08);
-  position: relative;
-  z-index: 10;
-}
-
-.stat-item {
-  flex: 1;
-  text-align: center;
-  position: relative;
-}
-
-.stat-item:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 20%;
-  height: 60%;
-  width: 2rpx;
-  background: #f0f0f0;
-}
-
-.stat-num {
-  display: block;
-  font-size: 44rpx;
-  font-weight: 700;
-  color: #1C1B2E;
-  margin-bottom: 12rpx;
-  font-family: monospace;
-}
-
-.stat-label {
-  font-size: 24rpx;
-  color: #8A8A9A;
-  font-weight: 500;
-}
-
-.menu-list {
-  background: #fff;
-  margin: 0 32rpx 32rpx;
-  border-radius: 32rpx;
-  overflow: hidden;
-  border: 1rpx solid #EBEBF0;
-  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.05);
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  padding: 34rpx 32rpx;
-  border-bottom: 1rpx dashed #f0f0f0;
-}
-
-.menu-item:active {
-  background-color: #FEF0F2;
-}
-
-.menu-item:last-child {
-  border-bottom: none;
-}
-
-.menu-icon {
-  font-size: 36rpx;
-  margin-right: 20rpx;
-}
-
-.menu-content {
-  flex: 1;
-}
-
-.menu-text {
-  flex: 1;
-  font-size: 28rpx;
-  color: #1C1B2E;
-}
-
-.menu-subtext {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  color: #8A8A9A;
-}
-
-.menu-arrow {
-  font-size: 32rpx;
-  color: #ccc;
-}
-
-.logout-section {
-  padding: 48rpx 24rpx;
-}
-
-.btn-logout {
-  width: 100%;
-  height: 88rpx;
-  background: #fff;
-  border: 2rpx solid #E8637A;
-  border-radius: 44rpx;
-  color: #E8637A;
-  font-size: 30rpx;
-}
-
-.sheet-scroll {
-  max-height: 58vh;
-}
-
-.edit-avatar-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 32rpx;
-}
-
-.edit-avatar {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 50%;
-  margin-bottom: 16rpx;
-}
-
-.edit-avatar-tip {
-  font-size: 24rpx;
-  color: #8A8A9A;
-}
-
-.input {
-  width: 100%;
-  height: 88rpx;
-  background: #F7F5F3;
-  border: 2rpx solid #EBEBF0;
-  border-radius: 20rpx;
-  padding: 0 24rpx;
-  font-size: 28rpx;
-  margin-bottom: 24rpx;
-  box-sizing: border-box;
-}
-
-.gender-section {
-  margin-bottom: 24rpx;
-}
-
-.section-label {
-  display: block;
-  font-size: 28rpx;
-  color: #1C1B2E;
-  margin-bottom: 16rpx;
-}
-
-.gender-options {
-  display: flex;
-  gap: 24rpx;
-}
-
-.gender-item {
-  flex: 1;
-  height: 80rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #F7F5F3;
-  border-radius: 16rpx;
-  font-size: 28rpx;
-  color: #5B5A6D;
-}
-
-.gender-item.active {
-  background: #FEF0F2;
-  color: #E8637A;
-}
-
-.date-picker-wrapper {
-  background: #F7F5F3;
-  border: 2rpx solid #EBEBF0;
-  border-radius: 20rpx;
-  padding: 0 24rpx;
-  margin-bottom: 24rpx;
-}
-
-.date-picker-display {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 88rpx;
-}
-
-.date-label {
-  font-size: 28rpx;
-  color: #1C1B2E;
-}
-
-.date-value {
-  font-size: 28rpx;
-  color: #8A8A9A;
-}
-
-.btn-primary {
-  width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
-  background: #E8637A;
-  border-radius: 44rpx;
-  color: #fff;
-  font-size: 32rpx;
-  border: none;
-}
-</style>
