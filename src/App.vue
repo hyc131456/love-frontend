@@ -373,10 +373,11 @@ view, text, image {
   padding: 8rpx 24rpx;
   border-radius: 999rpx;
   color: #FFFFFF;
-  background: linear-gradient(135deg, #E8637A, #9B8EC4);
+  background: linear-gradient(135deg, #F08DA5, #BDAFE2);
   font-size: 24rpx;
   line-height: 30rpx;
   font-weight: 700;
+  text-shadow: 0 1rpx 3rpx rgba(108, 82, 135, 0.16);
 }
 
 .mine-page .mine-level-name {
@@ -407,7 +408,7 @@ view, text, image {
 .mine-page .mine-progress-fill {
   height: 100%;
   border-radius: 999rpx;
-  background: linear-gradient(90deg, #E8637A, #9B8EC4);
+  background: linear-gradient(90deg, #F08DA5, #BDAFE2);
 }
 
 .mine-page .mine-progress-labels {
@@ -738,8 +739,8 @@ view, text, image {
   margin: 0 32rpx;
   padding: 48rpx 40rpx 40rpx;
   border-radius: 48rpx;
-  background: linear-gradient(135deg, #F48FA3 0%, #D987AA 50%, #B9A9DC 100%);
-  box-shadow: 0 10rpx 26rpx rgba(155, 120, 160, 0.12);
+  background: linear-gradient(135deg, #F8AFC0 0%, #E7A8C5 50%, #CDBFE8 100%);
+  box-shadow: 0 8rpx 22rpx rgba(155, 120, 160, 0.10);
 }
 
 .home-page .couple-card::before,
@@ -762,7 +763,7 @@ view, text, image {
   bottom: -50rpx;
   width: 200rpx;
   height: 200rpx;
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .home-page .couple-avatars {
@@ -789,7 +790,7 @@ view, text, image {
 
 .home-page .home-avatar-b {
   margin-left: -24rpx;
-  background: rgba(185, 169, 220, 0.42);
+  background: rgba(205, 191, 232, 0.42);
 }
 
 .home-page .home-avatar.muted {
@@ -817,7 +818,7 @@ view, text, image {
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: #FFFFFF;
-  color: #D86C88;
+  color: #D77D9A;
   font-size: 30rpx;
   line-height: 1;
   box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.16);
@@ -909,8 +910,8 @@ view, text, image {
 .home-page .intimacy-level {
   padding: 6rpx 20rpx;
   border-radius: 999rpx;
-  background: #F3F0FA;
-  color: #9B8EC4;
+  background: #F6F2FB;
+  color: #A79AD0;
   font-size: 24rpx;
   line-height: 30rpx;
   font-weight: 700;
@@ -926,7 +927,7 @@ view, text, image {
 .home-page .bar-fill {
   height: 100%;
   border-radius: 999rpx;
-  background: linear-gradient(90deg, #9B8EC4 0%, #E8637A 100%);
+  background: linear-gradient(90deg, #BDAFE2 0%, #F08DA5 100%);
   transition: width 0.35s ease;
 }
 
@@ -1129,11 +1130,12 @@ view, text, image {
   justify-content: center;
   border-radius: 50%;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #E8637A 0%, #9B8EC4 100%);
+  background: linear-gradient(135deg, #E58BA8 0%, #B8A9DD 100%);
   color: #FFFFFF;
   font-size: 28rpx;
   line-height: 1;
   font-weight: 800;
+  text-shadow: 0 1rpx 3rpx rgba(108, 82, 135, 0.14);
 }
 
 .home-page .activity-body {
