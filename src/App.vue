@@ -1189,6 +1189,13 @@ view, text, image {
   flex-shrink: 0;
 }
 
+.home-page .activity-img div,
+.home-page .activity-img img {
+  width: 100%;
+  height: 100%;
+  border-radius: 20rpx;
+}
+
 .home-page .activity-empty .activity-avatar {
   background: #FEF0F2;
   color: #E8637A;

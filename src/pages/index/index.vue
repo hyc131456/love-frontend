@@ -345,20 +345,45 @@ const getInitial = (name?: string) => {
   return text ? text.slice(0, 1) : '我'
 }
 
+const normalizeImageUrl = (value: any): string => {
+  if (!value) return ''
+
+  const rawUrl =
+    typeof value === 'string'
+      ? value
+      : value.thumbUrl || value.url || value.src || value.path || ''
+
+  if (!rawUrl || typeof rawUrl !== 'string') return ''
+  const url = rawUrl.trim()
+  if (!url) return ''
+  if (url.startsWith('/uploads/')) return `/api${url}`
+  return url
+}
+
 const parseImages = (value: any): string[] => {
   if (!value) return []
-  if (Array.isArray(value)) return value.filter(Boolean).slice(0, 3)
+  if (Array.isArray(value)) {
+    return value
+      .map(item => normalizeImageUrl(item))
+      .filter(Boolean)
+      .slice(0, 3)
+  }
 
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value)
-      if (Array.isArray(parsed)) return parsed.filter(Boolean).slice(0, 3)
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map(item => normalizeImageUrl(item))
+          .filter(Boolean)
+          .slice(0, 3)
+      }
     } catch (error) {
       // Some old records store images as comma separated URLs.
     }
     return value
       .split(',')
-      .map(item => item.trim())
+      .map(item => normalizeImageUrl(item))
       .filter(Boolean)
       .slice(0, 3)
   }
