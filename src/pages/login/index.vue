@@ -1,23 +1,49 @@
 <template>
   <view class="login-page">
-    <!-- 背景装饰 -->
-    <view class="bg-decoration">
-      <view class="circle circle-1"></view>
-      <view class="circle circle-2"></view>
-    </view>
-    
-    <!-- 内容区 -->
-    <view class="content">
-      <!-- Logo -->
-      <view class="logo-section">
-        <view class="logo">💕</view>
-        <text class="title">心迹·情侣时光</text>
-        <text class="subtitle">记录爱情 共享时光</text>
+    <view v-if="screen === 'welcome'" class="screen welcome-screen">
+      <view class="logo-wrap">
+        <view class="logo-icon">
+          <text class="logo-heart">💕</text>
+        </view>
+        <text class="app-name">心迹</text>
+        <text class="app-sub">情侣时光</text>
       </view>
-      
-      <!-- 登录/注册表单 -->
-      <view class="form-section">
-        <!-- Tab切换 -->
+
+      <view class="tagline">
+        <text>属于两个人的</text>
+        <text>数字记忆空间</text>
+      </view>
+
+      <view class="welcome-bottom">
+        <button class="btn-primary" @click="openForm('login')">登录</button>
+        <button class="btn-secondary" @click="openForm('register')">注册</button>
+        <button class="btn-wechat" @click="handleWxLogin" :loading="loading">
+          <text class="wechat-icon">💬</text>
+          <text>微信一键登录</text>
+        </button>
+        <view class="privacy">
+          <text>登录即同意 </text>
+          <text class="link">《用户协议》</text>
+          <text> 和 </text>
+          <text class="link">《隐私政策》</text>
+        </view>
+      </view>
+    </view>
+
+    <view v-else class="screen form-screen">
+      <view class="nav-bar">
+        <view class="nav-back" @click="screen = 'welcome'">‹</view>
+        <text class="nav-title">{{ mode === 'login' ? '账号登录' : '账号注册' }}</text>
+        <view class="nav-right"></view>
+      </view>
+
+      <view class="form-body">
+        <view class="form-heading">
+          <text class="form-title">{{ mode === 'login' ? '欢迎回来' : '创建账号' }}</text>
+          <text class="form-subtitle">{{ mode === 'login' ? '继续记录你们的专属时光' : '先拥有一个属于自己的入口' }}</text>
+        </view>
+
+        <view class="form-card">
         <view class="tabs">
           <view 
             class="tab" 
@@ -30,8 +56,7 @@
             @click="mode = 'register'"
           >注册</view>
         </view>
-        
-        <!-- 表单 -->
+
         <view class="form">
           <view class="input-group">
             <text class="input-icon">👤</text>
@@ -61,7 +86,7 @@
               maxlength="20"
             />
           </view>
-          
+
           <button 
             class="btn-submit" 
             @click="handleSubmit" 
@@ -70,28 +95,27 @@
             {{ mode === 'login' ? '登录' : '注册' }}
           </button>
         </view>
-        
-        <!-- 其他登录方式 -->
+
         <view class="divider">
           <view class="line"></view>
           <text>其他方式</text>
           <view class="line"></view>
         </view>
-        
+
         <view class="other-login">
-          <button class="btn-wx" @click="handleWxLogin">
-            <text class="icon">💬</text>
-            <text>微信登录</text>
+          <button class="btn-wechat compact" @click="handleWxLogin" :loading="loading">
+            <text class="wechat-icon">💬</text>
+            <text>微信一键登录</text>
           </button>
         </view>
       </view>
-      
-      <!-- 协议 -->
-      <view class="agreement">
+
+        <view class="agreement">
         <text>登录即表示同意</text>
         <text class="link">《用户协议》</text>
         <text>和</text>
         <text class="link">《隐私政策》</text>
+      </view>
       </view>
     </view>
   </view>
@@ -105,12 +129,18 @@ import { userApi } from '@/api'
 const userStore = useUserStore()
 const loading = ref(false)
 const mode = ref<'login' | 'register'>('login')
+const screen = ref<'welcome' | 'form'>('welcome')
 
 const form = ref({
   username: '',
   password: '',
   nickname: ''
 })
+
+const openForm = (nextMode: 'login' | 'register') => {
+  mode.value = nextMode
+  screen.value = 'form'
+}
 
 // 表单提交
 const handleSubmit = async () => {
@@ -199,84 +229,231 @@ const handleWxLogin = async () => {
   background: linear-gradient(160deg, #FDE8EC 0%, #F3EEFF 56%, #E8F4FF 100%);
   position: relative;
   overflow: hidden;
+  color: #1C1B2E;
 }
 
-.bg-decoration {
-  display: none;
+.login-page button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  line-height: 1;
+  overflow: visible;
 }
 
-.circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 107, 157, 0.1);
+.login-page button::after {
+  border: none;
 }
 
-.circle-1 {
-  width: 400rpx;
-  height: 400rpx;
-  top: -100rpx;
-  right: -100rpx;
+.screen {
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
-.circle-2 {
-  width: 300rpx;
-  height: 300rpx;
-  bottom: 200rpx;
-  left: -100rpx;
-}
-
-.content {
-  position: relative;
-  z-index: 1;
+.welcome-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 150rpx 48rpx 72rpx;
-  min-height: 100vh;
+  padding: 156rpx 64rpx 88rpx;
 }
 
-.logo-section {
+.logo-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 44rpx;
 }
 
-.logo {
+.logo-icon {
   width: 160rpx;
   height: 160rpx;
+  border-radius: 48rpx;
+  background: linear-gradient(135deg, #E8637A 0%, #9B8EC4 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 76rpx;
   margin-bottom: 24rpx;
-  border-radius: 48rpx;
-  background: linear-gradient(135deg, #E8637A 0%, #9B8EC4 100%);
   box-shadow: 0 16rpx 48rpx rgba(232, 99, 122, 0.35);
 }
 
-.title {
-  font-size: 48rpx;
+.logo-heart {
+  font-size: 72rpx;
+  line-height: 1;
+}
+
+.app-name {
+  font-size: 64rpx;
+  line-height: 76rpx;
   font-weight: 700;
   color: #1C1B2E;
-  margin-bottom: 12rpx;
-  letter-spacing: 4rpx;
+  letter-spacing: 8rpx;
 }
 
-.subtitle {
-  font-size: 26rpx;
+.app-sub {
+  margin-top: 10rpx;
+  font-size: 28rpx;
+  line-height: 36rpx;
   color: #8A8A9A;
-  letter-spacing: 4rpx;
+  letter-spacing: 7rpx;
 }
 
-.form-section {
+.tagline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #4A4860;
+  font-size: 36rpx;
+  line-height: 62rpx;
+  font-weight: 400;
+  text-align: center;
+}
+
+.welcome-bottom {
   width: 100%;
-  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-wechat,
+.btn-submit {
+  width: 100%;
+  height: 104rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.btn-primary {
+  background: #E8637A !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8rpx 32rpx rgba(232, 99, 122, 0.28);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.76) !important;
+  color: #E8637A !important;
+  border: 2rpx solid rgba(232, 99, 122, 0.28) !important;
+}
+
+.btn-wechat {
+  background: #07C160 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8rpx 32rpx rgba(7, 193, 96, 0.24);
+}
+
+.btn-wechat.compact {
+  height: 96rpx;
+  font-size: 28rpx;
+}
+
+.wechat-icon {
+  margin-right: 12rpx;
+  font-size: 30rpx;
+}
+
+.privacy,
+.agreement {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: #8A8A9A;
+  font-size: 22rpx;
+  line-height: 34rpx;
+  text-align: center;
+}
+
+.privacy {
+  margin-top: 4rpx;
+}
+
+.link {
+  color: #E8637A;
+}
+
+.form-screen {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, #FDE8EC 0%, #F3EEFF 56%, #E8F4FF 100%);
+}
+
+.nav-bar {
+  height: 118rpx;
+  padding: 0 40rpx 24rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: none;
+}
+
+.nav-back,
+.nav-right {
+  width: 64rpx;
+  height: 44rpx;
+  flex-shrink: 0;
+}
+
+.nav-back {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: #1C1B2E;
+  font-size: 56rpx;
+  line-height: 1;
+}
+
+.nav-title {
+  flex: 1;
+  color: #1C1B2E;
+  font-size: 34rpx;
+  line-height: 44rpx;
+  font-weight: 700;
+  text-align: center;
+}
+
+.form-body {
+  flex: 1;
+  padding: 64rpx 32rpx 56rpx;
+  box-sizing: border-box;
+}
+
+.form-heading {
+  margin-bottom: 28rpx;
+  padding: 0 8rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-title {
+  color: #1C1B2E;
+  font-size: 44rpx;
+  line-height: 56rpx;
+  font-weight: 700;
+}
+
+.form-subtitle {
+  margin-top: 8rpx;
+  color: #8A8A9A;
+  font-size: 26rpx;
+  line-height: 36rpx;
+}
+
+.form-card {
+  width: 100%;
+  background: #FFFFFF;
   border-radius: 32rpx;
   padding: 36rpx;
   border: 1rpx solid #EBEBF0;
-  box-shadow: 0 6rpx 24rpx rgba(28, 27, 46, 0.08);
+  box-shadow: 0 14rpx 44rpx rgba(28, 27, 46, 0.08);
   box-sizing: border-box;
 }
 
@@ -285,14 +462,15 @@ const handleWxLogin = async () => {
   margin-bottom: 40rpx;
   background: #F7F5F3;
   border-radius: 48rpx;
-  padding: 6rpx;
+  padding: 8rpx;
 }
 
 .tab {
   flex: 1;
   text-align: center;
-  padding: 18rpx;
+  padding: 18rpx 16rpx;
   font-size: 28rpx;
+  line-height: 34rpx;
   color: #8A8A9A;
   border-radius: 44rpx;
   transition: all 0.3s ease;
@@ -318,7 +496,7 @@ const handleWxLogin = async () => {
   width: 100%;
   height: 96rpx;
   background: #F7F5F3;
-  border: 2rpx solid #EBEBF0;
+  border: 1rpx solid #EBEBF0;
   border-radius: 20rpx;
   transition: all 0.3s ease;
   box-sizing: border-box;
@@ -326,7 +504,7 @@ const handleWxLogin = async () => {
 
 .input-group:focus-within {
   border-color: #E8637A;
-  background: #FEF0F2;
+  background: #FFFFFF;
   box-shadow: 0 4rpx 12rpx rgba(232, 99, 122, 0.1);
 }
 
@@ -346,22 +524,21 @@ const handleWxLogin = async () => {
   height: 100%;
   background: transparent;
   border: none;
+  box-sizing: border-box;
   font-size: 28rpx;
   color: #1C1B2E;
   padding-right: 32rpx;
   outline: none;
-  caret-color: #E8637A; /* 修改闪烁光标颜色为品牌色 */
-  -webkit-tap-highlight-color: transparent; /* 去除移动端点击灰色/蓝色高亮 */
+  caret-color: #E8637A;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* 确保无论在什么环境下都不会出现原生外边框 */
 .input:focus {
   outline: none;
 }
 
-/* 去除浏览器自带的密码/账户名的自动填充带来的蓝色背景 */
 input:-internal-autofill-selected {
-  background-color: transparent !important;
+  background-color: #F7F5F3 !important;
   background-image: none !important;
   color: #1C1B2E !important;
 }
@@ -370,22 +547,19 @@ input:-internal-autofill-selected {
 .input:-webkit-autofill:hover, 
 .input:-webkit-autofill:focus, 
 .input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #F7F5F3 inset !important;
   -webkit-text-fill-color: #1C1B2E !important;
   transition: background-color 9999s ease-in-out 0s;
 }
 
 .btn-submit {
   height: 96rpx;
-  background: #E8637A;
-  border-radius: 48rpx;
-  color: #fff;
+  background: #E8637A !important;
+  color: #FFFFFF !important;
   font-size: 32rpx;
-  font-weight: 600;
-  border: none;
   margin-top: 16rpx;
   box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.28);
-  letter-spacing: 4rpx;
+  letter-spacing: 2rpx;
   transition: all 0.2s ease;
 }
 
@@ -417,35 +591,7 @@ input:-internal-autofill-selected {
   justify-content: center;
 }
 
-.btn-wx {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 96rpx;
-  padding: 0 48rpx;
-  background: #07C160;
-  border-radius: 48rpx;
-  color: #fff;
-  font-size: 28rpx;
-  border: none;
-}
-
-.btn-wx .icon {
-  margin-right: 12rpx;
-}
-
 .agreement {
   margin-top: 28rpx;
-  position: static;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  font-size: 24rpx;
-  color: #8A8A9A;
-}
-
-.agreement .link {
-  color: #E8637A;
 }
 </style>
