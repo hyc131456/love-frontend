@@ -41,9 +41,12 @@ const getCurrentPagePath = () => {
 <style scoped>
 .app-tabbar {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
   bottom: 0;
+  width: 100%;
+  max-width: 390px;
+  transform: translateX(-50%);
   z-index: 80;
   min-height: 82px;
   padding-top: 12rpx;
