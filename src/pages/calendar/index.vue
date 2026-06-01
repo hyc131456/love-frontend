@@ -1,17 +1,16 @@
 <template>
   <view class="calendar-page">
-    <AppNavBar title="日历" />
+    <view class="calendar-tabbar-bg"></view>
+    <view class="calendar-header" :style="{ paddingTop: `${statusBarHeight}px` }">
+      <text class="calendar-title">共享日历</text>
+      <view class="header-nav">
+        <view class="header-arrow" @click="changeMonth(-1)">‹</view>
+        <text class="header-month">{{ currentYear }}年{{ currentMonth }}月</text>
+        <view class="header-arrow" @click="changeMonth(1)">›</view>
+      </view>
+    </view>
 
     <view class="calendar-card">
-      <view class="month-picker">
-        <view class="arrow" @click="changeMonth(-1)">‹</view>
-        <view class="month-copy">
-          <text class="month-text">{{ currentYear }}年{{ currentMonth }}月</text>
-          <text class="month-subtitle">记录约会、生日和小计划</text>
-        </view>
-        <view class="arrow" @click="changeMonth(1)">›</view>
-      </view>
-
       <view class="week-header">
         <text v-for="day in weekDays" :key="day" class="week-day">{{ day }}</text>
       </view>
@@ -29,7 +28,21 @@
           @click="selectDate(day)"
         >
           <text class="day-num">{{ day.day }}</text>
-          <view v-if="day.hasEvent" class="event-dot"></view>
+          <view v-if="day.events && day.events.length" class="day-pills">
+            <text
+              v-for="event in day.events.slice(0, 2)"
+              :key="event.id"
+              class="day-pill"
+              :style="{
+                color: getEventMeta(event).color,
+                background: toRgba(getEventMeta(event).color, 0.12)
+              }"
+            >
+              {{ event.title }}
+            </text>
+            <text v-if="day.events.length > 2" class="day-more">+{{ day.events.length - 2 }}</text>
+          </view>
+          <view v-else-if="day.hasEvent" class="event-dot"></view>
         </view>
       </view>
     </view>
@@ -37,33 +50,31 @@
     <view class="events-section">
       <view class="section-header">
         <view class="section-copy">
-          <text class="section-title">{{ selectedDate || '请选择日期' }}</text>
+          <text class="section-title">{{ selectedDateLabel }}</text>
           <text class="section-subtitle">{{ dayEvents.length }} 个事件</text>
         </view>
-        <view class="add-btn" @click="showAddEvent">添加</view>
       </view>
 
       <scroll-view scroll-y class="events-list">
-        <view v-for="event in dayEvents" :key="event.id" class="event-item">
-          <view class="event-icon" :style="{ background: getEventMeta(event).color }">
-            {{ event.icon || getEventMeta(event).icon }}
-          </view>
+        <view
+          v-for="event in dayEvents"
+          :key="event.id"
+          class="event-item"
+          :class="{ completed: event.status === 1 }"
+          @longpress.stop="showStatusSheet(event)"
+          @longtap.stop="showStatusSheet(event)"
+        >
+          <view class="event-bar" :style="{ background: getEventMeta(event).color }"></view>
 
           <view class="event-body">
-            <text class="event-title" :class="{ done: event.status === 1 }">{{ event.title }}</text>
+            <view class="event-top">
+              <text class="event-title" :class="{ done: event.status === 1 }">{{ event.title }}</text>
+              <text class="event-status" :class="getStatusClass(getDisplayStatus(event))">
+                {{ getStatusText(getDisplayStatus(event)) }}
+              </text>
+            </view>
 
             <view class="event-meta">
-              <text
-                class="event-badge"
-                :class="{ 'event-badge--done': event.status === 1 }"
-                :style="{
-                  color: getEventBadge(event).color,
-                  background: getEventBadge(event).background,
-                  borderColor: getEventBadge(event).borderColor
-                }"
-              >
-                {{ getEventBadge(event).label }}
-              </text>
               <text class="event-time">{{ getEventTimeText(event) }}</text>
               <text v-if="event.repeatType && event.repeatType !== 'none'" class="event-repeat">
                 {{ getRepeatLabel(event.repeatType) }}
@@ -71,17 +82,6 @@
             </view>
 
             <text v-if="event.note" class="event-note">{{ event.note }}</text>
-          </view>
-
-          <view class="event-actions">
-            <view
-              v-if="event.status === 0"
-              class="action-btn action-btn--complete"
-              @click.stop="completeEvent(event.id)"
-            >
-              完成
-            </view>
-            <view class="action-btn action-btn--delete" @click.stop="deleteEvent(event.id)">删除</view>
           </view>
         </view>
 
@@ -139,16 +139,39 @@
       <button class="btn-primary" @click="addEvent">保存事件</button>
     </AppSheet>
 
+    <AppSheet :open="showStatusModal" title="修改事件状态" @close="closeStatusSheet">
+      <view class="status-options">
+        <view
+          v-for="item in statusOptions"
+          :key="item.value"
+          class="status-option"
+          :class="{
+            selected: selectedEvent && getDisplayStatus(selectedEvent) === item.value,
+            disabled: item.disabled
+          }"
+          @click="selectStatus(item.value)"
+        >
+          <text class="event-status" :class="getStatusClass(item.value)">{{ getStatusText(item.value) }}</text>
+          <text v-if="selectedEvent && getDisplayStatus(selectedEvent) === item.value" class="status-current">当前状态</text>
+          <text v-else-if="item.disabled" class="status-current">暂不支持</text>
+        </view>
+        <view class="status-option delete-option" @click="deleteSelectedEvent">
+          <text class="delete-option-text">删除事件</text>
+          <text class="status-current">需确认</text>
+        </view>
+      </view>
+    </AppSheet>
+
+    <view class="calendar-fab" @click="showAddEvent">+</view>
     <AppTabBar current="/pages/calendar/index" />
   </view>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { calendarApi } from '@/api'
 import { useUserStore } from '@/stores/user'
-import AppNavBar from '@/components/AppNavBar.vue'
 import AppSheet from '@/components/AppSheet.vue'
 import AppTabBar from '@/components/AppTabBar.vue'
 
@@ -165,6 +188,7 @@ type CalendarDay = {
   isToday?: boolean
   dateStr: string
   hasEvent?: boolean
+  events?: CalendarEvent[]
 }
 
 type CalendarEvent = {
@@ -190,6 +214,19 @@ type EventForm = {
 }
 
 const userStore = useUserStore()
+const statusBarHeight = ref(uni.getSystemInfoSync().statusBarHeight || 0)
+
+const getDateStr = (date = new Date()) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+
+const today = new Date()
+const todayStr = getDateStr(today)
+const syncTodaySelection = () => {
+  const now = new Date()
+  currentYear.value = now.getFullYear()
+  currentMonth.value = now.getMonth() + 1
+  selectedDate.value = getDateStr(now)
+}
 
 const weekDays = ['日', '一', '二', '三', '四', '五', '六']
 const eventTypes: EventTypeMeta[] = [
@@ -216,15 +253,32 @@ const createDefaultEvent = (): EventForm => ({
   note: ''
 })
 
-const currentYear = ref(new Date().getFullYear())
-const currentMonth = ref(new Date().getMonth() + 1)
-const selectedDate = ref('')
+const currentYear = ref(today.getFullYear())
+const currentMonth = ref(today.getMonth() + 1)
+const selectedDate = ref(todayStr)
 const calendarDays = ref<CalendarDay[]>([])
 const dayEvents = ref<CalendarEvent[]>([])
 const dateMarks = ref<Record<string, string[]>>({})
+const monthEventsByDate = ref<Record<string, CalendarEvent[]>>({})
 
 const showEventModal = ref(false)
+const showStatusModal = ref(false)
+const selectedEvent = ref<CalendarEvent | null>(null)
 const newEvent = ref<EventForm>(createDefaultEvent())
+
+const statusOptions = [
+  { value: 0 },
+  { value: 1, disabled: true },
+  { value: 2 }
+]
+
+const selectedDateLabel = computed(() => {
+  if (!selectedDate.value) return '请选择日期'
+  const parts = selectedDate.value.split('-')
+  if (parts.length !== 3) return selectedDate.value
+  const label = `${Number(parts[1])}月${Number(parts[2])}日`
+  return selectedDate.value === getDateStr() ? `${label} · 今天` : label
+})
 
 const getEventMeta = (event: Pick<CalendarEvent, 'type' | 'icon' | 'color'>): EventTypeMeta => {
   const meta = eventTypeMap[event.type] || eventTypeMap.todo
@@ -233,6 +287,20 @@ const getEventMeta = (event: Pick<CalendarEvent, 'type' | 'icon' | 'color'>): Ev
     icon: event.icon || meta.icon,
     color: event.color || meta.color
   }
+}
+
+const getDisplayStatus = (event: CalendarEvent) => (event.status === 1 ? 2 : 0)
+
+const getStatusText = (status?: number) => {
+  if (status === 2) return '已完成 ✓'
+  if (status === 1) return '进行中'
+  return '未开始'
+}
+
+const getStatusClass = (status?: number) => {
+  if (status === 2) return 'done'
+  if (status === 1) return 'doing'
+  return 'todo'
 }
 
 const toRgba = (hex: string, alpha: number) => {
@@ -299,8 +367,7 @@ const generateCalendar = () => {
   const startDay = firstDay.getDay()
   const daysInMonth = lastDay.getDate()
 
-  const today = new Date()
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const currentTodayStr = getDateStr()
   const days: CalendarDay[] = []
 
   const prevMonth = new Date(year, month - 1, 0)
@@ -315,12 +382,14 @@ const generateCalendar = () => {
 
   for (let i = 1; i <= daysInMonth; i++) {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`
+    const events = monthEventsByDate.value[dateStr] || []
     days.push({
       day: i,
       isCurrentMonth: true,
-      isToday: dateStr === todayStr,
+      isToday: dateStr === currentTodayStr,
       dateStr,
-      hasEvent: (dateMarks.value[dateStr] || []).length > 0
+      hasEvent: events.length > 0 || (dateMarks.value[dateStr] || []).length > 0,
+      events
     })
   }
 
@@ -362,6 +431,7 @@ const selectDate = (day: CalendarDay) => {
 const loadMonthEvents = async () => {
   if (!userStore.userInfo?.coupleId) {
     dateMarks.value = {}
+    monthEventsByDate.value = {}
     generateCalendar()
     return
   }
@@ -369,16 +439,27 @@ const loadMonthEvents = async () => {
   try {
     const data = await calendarApi.getMonthEvents(currentYear.value, currentMonth.value)
     dateMarks.value = data.dateMarks || {}
+    monthEventsByDate.value = (data.events || []).reduce(
+      (map: Record<string, CalendarEvent[]>, event: CalendarEvent) => {
+        const date = String(event.eventDate || '').slice(0, 10)
+        if (!date) return map
+        if (!map[date]) map[date] = []
+        map[date].push(event)
+        return map
+      },
+      {}
+    )
   } catch (error) {
     console.error('加载月事件失败', error)
     dateMarks.value = {}
+    monthEventsByDate.value = {}
   }
 
   generateCalendar()
 }
 
 const loadDayEvents = async () => {
-  if (!selectedDate.value) return
+  ensureSelectedDate()
 
   if (!userStore.userInfo?.coupleId) {
     dayEvents.value = []
@@ -392,6 +473,11 @@ const loadDayEvents = async () => {
     console.error('加载日事件失败', error)
     dayEvents.value = []
   }
+}
+
+const ensureSelectedDate = () => {
+  if (selectedDate.value) return
+  selectedDate.value = getDateStr()
 }
 
 const toggleAllDay = (e: any) => {
@@ -408,6 +494,16 @@ const onEventTimeChange = (e: any) => {
 
 const closeEventModal = () => {
   showEventModal.value = false
+}
+
+const showStatusSheet = (event: CalendarEvent) => {
+  selectedEvent.value = event
+  showStatusModal.value = true
+}
+
+const closeStatusSheet = () => {
+  showStatusModal.value = false
+  selectedEvent.value = null
 }
 
 const showAddEvent = () => {
@@ -456,13 +552,61 @@ const addEvent = async () => {
 const completeEvent = async (id: number) => {
   try {
     await calendarApi.completeEvent(id)
+    const event = dayEvents.value.find(item => item.id === id)
+    if (event) event.status = 1
+    closeStatusSheet()
     await Promise.all([loadMonthEvents(), loadDayEvents()])
   } catch (error) {
     console.error('完成事件失败', error)
   }
 }
 
-const deleteEvent = (id: number) => {
+const reopenEvent = (event: CalendarEvent) => {
+  uni.showModal({
+    title: '确认修改状态',
+    content: '要将这个事件改为「未开始」吗？',
+    confirmColor: '#E8637A',
+    success: async res => {
+      if (!res.confirm) return
+
+      try {
+        await calendarApi.updateEvent({ ...event, status: 0 })
+        event.status = 0
+        closeStatusSheet()
+        await Promise.all([loadMonthEvents(), loadDayEvents()])
+      } catch (error) {
+        console.error('修改事件状态失败', error)
+      }
+    }
+  })
+}
+
+const selectStatus = (status: number) => {
+  const event = selectedEvent.value
+  if (!event) return
+
+  if (status === 1) {
+    uni.showToast({ title: '日历事件暂不支持进行中', icon: 'none' })
+    return
+  }
+
+  const currentStatus = event.status === 1 ? 2 : 0
+  if (currentStatus === status) {
+    closeStatusSheet()
+    return
+  }
+
+  if (status === 2) {
+    completeEvent(event.id)
+    return
+  }
+
+  if (status === 0 && event.status === 1) {
+    reopenEvent(event)
+  }
+}
+
+const deleteEvent = async (id: number) => {
   uni.showModal({
     title: '确认删除',
     content: '删除后将无法恢复，确定继续吗？',
@@ -473,6 +617,7 @@ const deleteEvent = (id: number) => {
       try {
         await calendarApi.deleteEvent(id)
         await Promise.all([loadMonthEvents(), loadDayEvents()])
+        closeStatusSheet()
         uni.showToast({ title: '删除成功', icon: 'success' })
       } catch (error) {
         console.error('删除事件失败', error)
@@ -481,13 +626,15 @@ const deleteEvent = (id: number) => {
   })
 }
 
-onMounted(() => {
-  const today = new Date()
-  selectedDate.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-})
+const deleteSelectedEvent = () => {
+  const event = selectedEvent.value
+  if (!event) return
+  deleteEvent(event.id)
+}
 
 onShow(async () => {
   uni.hideTabBar()
+  syncTodaySelection()
   await userStore.fetchUserInfo()
   await Promise.all([loadMonthEvents(), loadDayEvents()])
 })
@@ -495,97 +642,145 @@ onShow(async () => {
 
 <style scoped>
 .calendar-page {
+  position: relative;
   min-height: 100vh;
   background: #F7F5F3;
-  padding-bottom: 164rpx;
+  padding-bottom: calc(82px + env(safe-area-inset-bottom));
 }
 
-.calendar-card {
-  margin: 24rpx 32rpx;
-  border-radius: 30rpx;
-  overflow: hidden;
+.calendar-tabbar-bg {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 79;
+  width: 100%;
+  max-width: 390px;
+  height: calc(82px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
   background: #FFFFFF;
-  border: 1rpx solid #EBEBF0;
-  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
+  border-top: 1rpx solid #EBEBF0;
 }
 
-.month-picker {
+.calendar-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding-left: 40rpx;
+  padding-right: 40rpx;
+  padding-bottom: 28rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 26rpx 18rpx;
   background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
 }
 
-.arrow {
-  width: 60rpx;
-  height: 60rpx;
+.calendar-title {
+  font-size: 36rpx;
+  line-height: 44rpx;
+  font-weight: 700;
+  color: #1C1B2E;
+}
+
+.header-nav {
+  display: grid;
+  grid-template-columns: 64rpx 168rpx 64rpx;
+  align-items: center;
+  justify-content: center;
+  column-gap: 8rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+}
+
+.header-arrow {
+  width: 64rpx;
+  height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 16rpx;
   font-size: 44rpx;
+  line-height: 1;
   color: #1C1B2E;
 }
 
-.month-copy {
-  flex: 1;
+.header-month {
+  width: 168rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(4rpx);
   text-align: center;
-}
-
-.month-text {
-  display: block;
-  font-size: 34rpx;
-  line-height: 42rpx;
+  font-size: 30rpx;
+  line-height: 1;
   font-weight: 600;
   color: #1C1B2E;
+  white-space: nowrap;
 }
 
-.month-subtitle {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  color: #8A8A9A;
+.calendar-card {
+  overflow: hidden;
+  background: #FFFFFF;
+  padding: 0 16rpx 12rpx;
+  border-bottom: 1rpx solid #EBEBF0;
 }
 
 .week-header {
   display: flex;
-  padding: 8rpx 16rpx 0;
+  padding: 12rpx 0 8rpx;
   background: #FFFFFF;
 }
 
 .week-day {
   flex: 1;
-  padding: 14rpx 0;
+  padding: 8rpx 0;
   text-align: center;
-  font-size: 24rpx;
+  font-size: 22rpx;
+  line-height: 28rpx;
+  font-weight: 500;
   color: #8A8A9A;
 }
 
 .calendar-grid {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 0 16rpx 18rpx;
-  background: #FFFFFF;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  padding: 0;
+  background: #EBEBF0;
 }
 
 .day-cell {
-  width: calc(100% / 7);
-  aspect-ratio: 1;
+  height: 144rpx;
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: 8rpx;
+  box-sizing: border-box;
+  background: #FFFFFF;
+}
+
+.day-cell.other-month {
+  background: #FAFAFA;
 }
 
 .day-num {
-  width: 56rpx;
-  height: 56rpx;
+  width: 44rpx;
+  height: 44rpx;
+  margin-bottom: 4rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 18rpx;
-  font-size: 28rpx;
+  border-radius: 50%;
+  font-size: 24rpx;
+  line-height: 30rpx;
+  font-weight: 500;
   color: #1C1B2E;
 }
 
@@ -594,13 +789,47 @@ onShow(async () => {
 }
 
 .day-cell.today .day-num {
+  background: #E8637A;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.day-cell.selected .day-num {
   background: #FEF0F2;
   color: #E8637A;
 }
 
-.day-cell.selected .day-num {
+.day-cell.today.selected .day-num {
   background: #E8637A;
   color: #FFFFFF;
+}
+
+.day-pills {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.day-pill {
+  width: 100%;
+  min-width: 0;
+  padding: 2rpx 6rpx;
+  box-sizing: border-box;
+  border-radius: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18rpx;
+  line-height: 24rpx;
+  font-weight: 500;
+}
+
+.day-more {
+  padding-left: 4rpx;
+  font-size: 18rpx;
+  line-height: 22rpx;
+  color: #8A8A9A;
 }
 
 .event-dot {
@@ -613,79 +842,72 @@ onShow(async () => {
 }
 
 .events-section {
-  margin: 32rpx;
-  padding: 32rpx;
-  border-radius: 28rpx;
-  background: #FFFFFF;
-  border: 1rpx solid #EBEBF0;
-  box-shadow: 0 4rpx 16rpx rgba(28, 27, 46, 0.06);
+  margin: 20rpx 32rpx 32rpx;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24rpx;
+  margin-bottom: 16rpx;
 }
 
 .section-copy {
   flex: 1;
   min-width: 0;
-  padding-right: 16rpx;
 }
 
 .section-title {
   display: block;
-  font-size: 30rpx;
+  font-size: 24rpx;
+  line-height: 30rpx;
   font-weight: 600;
-  color: #1C1B2E;
+  color: #8A8A9A;
+  letter-spacing: 1rpx;
 }
 
 .section-subtitle {
-  display: block;
-  margin-top: 8rpx;
-  font-size: 24rpx;
+  display: none;
+  margin-top: 0;
+  font-size: 22rpx;
+  line-height: 28rpx;
   color: #8A8A9A;
 }
 
-.add-btn {
-  flex-shrink: 0;
-  min-width: 104rpx;
-  height: 56rpx;
-  line-height: 56rpx;
-  text-align: center;
-  font-size: 24rpx;
-  color: #E8637A;
-  background: #FEF0F2;
-  border-radius: 999rpx;
-}
-
 .events-list {
-  max-height: 520rpx;
+  max-height: calc(100vh - 680rpx);
 }
 
 .event-item {
   display: flex;
-  align-items: stretch;
-  padding: 22rpx 0;
-  border-bottom: 1rpx solid #F1F0F3;
+  align-items: center;
+  margin-bottom: 16rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 24rpx;
+  background: #FFFFFF;
+  border: none;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.event-item.completed {
+  opacity: 0.78;
 }
 
 .event-item:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
-.event-icon {
-  width: 68rpx;
-  height: 68rpx;
-  margin-right: 18rpx;
+.event-bar {
+  width: 6rpx;
+  height: 64rpx;
+  margin-right: 20rpx;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 18rpx;
-  font-size: 28rpx;
-  color: #FFFFFF;
+  border-radius: 4rpx;
 }
 
 .event-body {
@@ -696,12 +918,19 @@ onShow(async () => {
   justify-content: center;
 }
 
+.event-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
 .event-title {
   flex: 1;
   min-width: 0;
   font-size: 28rpx;
-  line-height: 1.4;
-  font-weight: 500;
+  line-height: 36rpx;
+  font-weight: 600;
   color: #1C1B2E;
 }
 
@@ -710,77 +939,63 @@ onShow(async () => {
   text-decoration: line-through;
 }
 
+.event-status {
+  flex-shrink: 0;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  line-height: 26rpx;
+  font-weight: 600;
+}
+
+.event-status.todo {
+  background: #F7F5F3;
+  color: #8A8A9A;
+}
+
+.event-status.doing {
+  background: #FFF7E6;
+  color: #F5A623;
+}
+
+.event-status.done {
+  background: #F0FFF4;
+  color: #4CAF50;
+}
+
 .event-meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 12rpx;
-  margin-top: 10rpx;
-}
-
-.event-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 8rpx 16rpx;
-  border-radius: 999rpx;
-  border: 1rpx solid transparent;
-  font-size: 22rpx;
-  line-height: 1;
+  margin-top: 2rpx;
 }
 
 .event-time,
 .event-repeat {
-  font-size: 24rpx;
+  font-size: 22rpx;
+  line-height: 28rpx;
   color: #8A8A9A;
 }
 
 .event-note {
-  margin-top: 10rpx;
+  margin-top: 6rpx;
   font-size: 22rpx;
-  line-height: 1.6;
+  line-height: 30rpx;
   color: #8A8A9A;
 }
 
-.event-actions {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10rpx;
-  margin-left: 18rpx;
-  flex-shrink: 0;
-}
-
-.action-btn {
-  min-width: 84rpx;
-  height: 46rpx;
-  padding: 0 16rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999rpx;
-  font-size: 22rpx;
-}
-
-.action-btn--complete {
-  color: #2F8E5B;
-  background: #EEF9F3;
-}
-
-.action-btn--delete {
-  color: #E75B65;
-  background: #FEF0F2;
-}
-
 .empty-tip {
-  padding: 56rpx 24rpx;
+  padding: 32rpx 24rpx;
+  border-radius: 24rpx;
   text-align: center;
+  background: #FFFFFF;
+  border: 1rpx solid #EBEBF0;
 }
 
 .empty-title {
   display: block;
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 600;
   color: #1C1B2E;
 }
@@ -799,37 +1014,39 @@ onShow(async () => {
 
 .input {
   width: 100%;
-  height: 88rpx;
+  height: 80rpx;
   margin-bottom: 24rpx;
   padding: 0 24rpx;
   box-sizing: border-box;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   background: #F7F5F3;
-  border: 2rpx solid #EBEBF0;
+  border: 1rpx solid #EBEBF0;
   font-size: 28rpx;
 }
 
 .type-selector {
   display: flex;
   flex-wrap: wrap;
-  gap: 14rpx;
+  gap: 12rpx;
 }
 
 .type-item {
-  width: calc((100% - 42rpx) / 4);
+  width: auto;
   min-width: 0;
-  height: 76rpx;
-  padding: 0 8rpx;
+  height: 60rpx;
+  padding: 0 24rpx;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 18rpx;
+  border-radius: 999rpx;
   background: #F7F5F3;
+  border: 1rpx solid #EBEBF0;
 }
 
 .type-item.active {
   background: #FEF0F2;
+  border-color: #E8637A;
   color: #E8637A;
 }
 
@@ -845,13 +1062,13 @@ onShow(async () => {
 
 .form-card {
   margin-top: 24rpx;
-  padding: 8rpx 24rpx 24rpx;
+  padding: 4rpx 24rpx 24rpx;
   border-radius: 20rpx;
   background: #F7F5F3;
 }
 
 .form-row {
-  min-height: 88rpx;
+  min-height: 80rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -883,7 +1100,7 @@ onShow(async () => {
 
 .textarea {
   width: 100%;
-  min-height: 140rpx;
+  min-height: 132rpx;
   margin-top: 16rpx;
   padding: 20rpx;
   box-sizing: border-box;
@@ -903,9 +1120,77 @@ onShow(async () => {
   justify-content: center;
   background: #E8637A;
   border: none;
-  border-radius: 44rpx;
+  border-radius: 24rpx;
   color: #FFFFFF;
   font-size: 30rpx;
   font-weight: 500;
+}
+
+.status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.status-option {
+  min-height: 88rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 22rpx;
+  background: #F7F5F3;
+  border: 2rpx solid transparent;
+}
+
+.status-option.selected {
+  background: #FFFFFF;
+  border-color: #E8637A;
+}
+
+.status-option.disabled {
+  opacity: 0.52;
+}
+
+.delete-option {
+  background: #FEF0F2;
+  border-color: rgba(231, 91, 101, 0.14);
+}
+
+.delete-option-text {
+  color: #E75B65;
+  font-size: 28rpx;
+  line-height: 36rpx;
+  font-weight: 600;
+}
+
+.status-current {
+  font-size: 24rpx;
+  color: #8A8A9A;
+}
+
+.calendar-fab {
+  position: fixed;
+  right: calc(50% - 195px + 40rpx);
+  bottom: 180rpx;
+  z-index: 70;
+  width: 100rpx;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #E8637A;
+  box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.32);
+  color: #FFFFFF;
+  font-size: 48rpx;
+  line-height: 1;
+  font-weight: 500;
+}
+
+@media (max-width: 390px) {
+  .calendar-fab {
+    right: 40rpx;
+  }
 }
 </style>
