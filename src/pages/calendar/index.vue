@@ -60,18 +60,14 @@
           v-for="event in dayEvents"
           :key="event.id"
           class="event-item"
-          :class="{ completed: event.status === 1 }"
-          @longpress.stop="showStatusSheet(event)"
-          @longtap.stop="showStatusSheet(event)"
+          @longpress.stop="showEventActions(event)"
+          @longtap.stop="showEventActions(event)"
         >
           <view class="event-bar" :style="{ background: getEventMeta(event).color }"></view>
 
           <view class="event-body">
             <view class="event-top">
-              <text class="event-title" :class="{ done: event.status === 1 }">{{ event.title }}</text>
-              <text class="event-status" :class="getStatusClass(getDisplayStatus(event))">
-                {{ getStatusText(getDisplayStatus(event)) }}
-              </text>
+              <text class="event-title">{{ event.title }}</text>
             </view>
 
             <view class="event-meta">
@@ -139,25 +135,29 @@
       <button class="btn-primary" @click="addEvent">保存事件</button>
     </AppSheet>
 
-    <AppSheet :open="showStatusModal" title="修改事件状态" @close="closeStatusSheet">
-      <view class="status-options">
+    <AppSheet :open="showActionModal" title="事件操作" @close="closeActionSheet">
+      <view class="action-options">
         <view
-          v-for="item in statusOptions"
-          :key="item.value"
-          class="status-option"
-          :class="{
-            selected: selectedEvent && getDisplayStatus(selectedEvent) === item.value,
-            disabled: item.disabled
-          }"
-          @click="selectStatus(item.value)"
+          v-if="canReorderSelectedEvent"
+          class="action-option"
+          :class="{ disabled: !canMoveSelectedEventUp }"
+          @click="moveSelectedEvent(-1)"
         >
-          <text class="event-status" :class="getStatusClass(item.value)">{{ getStatusText(item.value) }}</text>
-          <text v-if="selectedEvent && getDisplayStatus(selectedEvent) === item.value" class="status-current">当前状态</text>
-          <text v-else-if="item.disabled" class="status-current">暂不支持</text>
+          <text class="action-option-text">上移</text>
+          <text class="action-hint">提前显示</text>
         </view>
-        <view class="status-option delete-option" @click="deleteSelectedEvent">
+        <view
+          v-if="canReorderSelectedEvent"
+          class="action-option"
+          :class="{ disabled: !canMoveSelectedEventDown }"
+          @click="moveSelectedEvent(1)"
+        >
+          <text class="action-option-text">下移</text>
+          <text class="action-hint">靠后显示</text>
+        </view>
+        <view class="action-option delete-option" @click="deleteSelectedEvent">
           <text class="delete-option-text">删除事件</text>
-          <text class="status-current">需确认</text>
+          <text class="action-hint">需确认</text>
         </view>
       </view>
     </AppSheet>
@@ -202,7 +202,7 @@ type CalendarEvent = {
   note?: string
   color?: string
   icon?: string
-  status?: number
+  sortOrder?: number
 }
 
 type EventForm = {
@@ -262,15 +262,21 @@ const dateMarks = ref<Record<string, string[]>>({})
 const monthEventsByDate = ref<Record<string, CalendarEvent[]>>({})
 
 const showEventModal = ref(false)
-const showStatusModal = ref(false)
+const showActionModal = ref(false)
 const selectedEvent = ref<CalendarEvent | null>(null)
 const newEvent = ref<EventForm>(createDefaultEvent())
 
-const statusOptions = [
-  { value: 0 },
-  { value: 1, disabled: true },
-  { value: 2 }
-]
+const selectedEventIndex = computed(() => {
+  const event = selectedEvent.value
+  if (!event) return -1
+  return dayEvents.value.findIndex(item => item.id === event.id)
+})
+
+const canReorderSelectedEvent = computed(() => dayEvents.value.length > 1 && selectedEventIndex.value >= 0)
+const canMoveSelectedEventUp = computed(() => canReorderSelectedEvent.value && selectedEventIndex.value > 0)
+const canMoveSelectedEventDown = computed(
+  () => canReorderSelectedEvent.value && selectedEventIndex.value < dayEvents.value.length - 1
+)
 
 const selectedDateLabel = computed(() => {
   if (!selectedDate.value) return '请选择日期'
@@ -287,20 +293,6 @@ const getEventMeta = (event: Pick<CalendarEvent, 'type' | 'icon' | 'color'>): Ev
     icon: event.icon || meta.icon,
     color: event.color || meta.color
   }
-}
-
-const getDisplayStatus = (event: CalendarEvent) => (event.status === 1 ? 2 : 0)
-
-const getStatusText = (status?: number) => {
-  if (status === 2) return '已完成 ✓'
-  if (status === 1) return '进行中'
-  return '未开始'
-}
-
-const getStatusClass = (status?: number) => {
-  if (status === 2) return 'done'
-  if (status === 1) return 'doing'
-  return 'todo'
 }
 
 const toRgba = (hex: string, alpha: number) => {
@@ -321,25 +313,6 @@ const toRgba = (hex: string, alpha: number) => {
   const green = Number.parseInt(fullHex.slice(2, 4), 16)
   const blue = Number.parseInt(fullHex.slice(4, 6), 16)
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`
-}
-
-const getEventBadge = (event: CalendarEvent) => {
-  if (event.status === 1) {
-    return {
-      label: '已完成',
-      color: '#4CAF50',
-      background: '#F0FFF4',
-      borderColor: '#D7EFDF'
-    }
-  }
-
-  const meta = getEventMeta(event)
-  return {
-    label: meta.label,
-    color: meta.color,
-    background: toRgba(meta.color, 0.12),
-    borderColor: toRgba(meta.color, 0.2)
-  }
 }
 
 const getEventTimeText = (event: CalendarEvent) => {
@@ -496,14 +469,44 @@ const closeEventModal = () => {
   showEventModal.value = false
 }
 
-const showStatusSheet = (event: CalendarEvent) => {
+const showEventActions = (event: CalendarEvent) => {
   selectedEvent.value = event
-  showStatusModal.value = true
+  showActionModal.value = true
 }
 
-const closeStatusSheet = () => {
-  showStatusModal.value = false
+const closeActionSheet = () => {
+  showActionModal.value = false
   selectedEvent.value = null
+}
+
+const persistDayEventOrder = async () => {
+  await calendarApi.reorderEvents({
+    date: selectedDate.value,
+    eventIds: dayEvents.value.map(event => event.id)
+  })
+}
+
+const moveSelectedEvent = async (delta: number) => {
+  const currentIndex = selectedEventIndex.value
+  const targetIndex = currentIndex + delta
+
+  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= dayEvents.value.length) {
+    return
+  }
+
+  const nextEvents = [...dayEvents.value]
+  const [event] = nextEvents.splice(currentIndex, 1)
+  nextEvents.splice(targetIndex, 0, event)
+  dayEvents.value = nextEvents
+
+  try {
+    await persistDayEventOrder()
+    await loadMonthEvents()
+  } catch (error) {
+    console.error('调整事件顺序失败', error)
+    uni.showToast({ title: '调整顺序失败', icon: 'none' })
+    await Promise.all([loadMonthEvents(), loadDayEvents()])
+  }
 }
 
 const showAddEvent = () => {
@@ -549,63 +552,6 @@ const addEvent = async () => {
   }
 }
 
-const completeEvent = async (id: number) => {
-  try {
-    await calendarApi.completeEvent(id)
-    const event = dayEvents.value.find(item => item.id === id)
-    if (event) event.status = 1
-    closeStatusSheet()
-    await Promise.all([loadMonthEvents(), loadDayEvents()])
-  } catch (error) {
-    console.error('完成事件失败', error)
-  }
-}
-
-const reopenEvent = (event: CalendarEvent) => {
-  uni.showModal({
-    title: '确认修改状态',
-    content: '要将这个事件改为「未开始」吗？',
-    confirmColor: '#E8637A',
-    success: async res => {
-      if (!res.confirm) return
-
-      try {
-        await calendarApi.updateEvent({ ...event, status: 0 })
-        event.status = 0
-        closeStatusSheet()
-        await Promise.all([loadMonthEvents(), loadDayEvents()])
-      } catch (error) {
-        console.error('修改事件状态失败', error)
-      }
-    }
-  })
-}
-
-const selectStatus = (status: number) => {
-  const event = selectedEvent.value
-  if (!event) return
-
-  if (status === 1) {
-    uni.showToast({ title: '日历事件暂不支持进行中', icon: 'none' })
-    return
-  }
-
-  const currentStatus = event.status === 1 ? 2 : 0
-  if (currentStatus === status) {
-    closeStatusSheet()
-    return
-  }
-
-  if (status === 2) {
-    completeEvent(event.id)
-    return
-  }
-
-  if (status === 0 && event.status === 1) {
-    reopenEvent(event)
-  }
-}
-
 const deleteEvent = async (id: number) => {
   uni.showModal({
     title: '确认删除',
@@ -617,7 +563,7 @@ const deleteEvent = async (id: number) => {
       try {
         await calendarApi.deleteEvent(id)
         await Promise.all([loadMonthEvents(), loadDayEvents()])
-        closeStatusSheet()
+        closeActionSheet()
         uni.showToast({ title: '删除成功', icon: 'success' })
       } catch (error) {
         console.error('删除事件失败', error)
@@ -894,10 +840,6 @@ onShow(async () => {
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
 }
 
-.event-item.completed {
-  opacity: 0.78;
-}
-
 .event-item:last-child {
   margin-bottom: 0;
 }
@@ -932,35 +874,6 @@ onShow(async () => {
   line-height: 36rpx;
   font-weight: 600;
   color: #1C1B2E;
-}
-
-.event-title.done {
-  color: #8A8A9A;
-  text-decoration: line-through;
-}
-
-.event-status {
-  flex-shrink: 0;
-  padding: 6rpx 16rpx;
-  border-radius: 999rpx;
-  font-size: 20rpx;
-  line-height: 26rpx;
-  font-weight: 600;
-}
-
-.event-status.todo {
-  background: #F7F5F3;
-  color: #8A8A9A;
-}
-
-.event-status.doing {
-  background: #FFF7E6;
-  color: #F5A623;
-}
-
-.event-status.done {
-  background: #F0FFF4;
-  color: #4CAF50;
 }
 
 .event-meta {
@@ -1126,13 +1039,13 @@ onShow(async () => {
   font-weight: 500;
 }
 
-.status-options {
+.action-options {
   display: flex;
   flex-direction: column;
   gap: 16rpx;
 }
 
-.status-option {
+.action-option {
   min-height: 88rpx;
   padding: 0 24rpx;
   display: flex;
@@ -1143,13 +1056,15 @@ onShow(async () => {
   border: 2rpx solid transparent;
 }
 
-.status-option.selected {
-  background: #FFFFFF;
-  border-color: #E8637A;
+.action-option.disabled {
+  opacity: 0.42;
 }
 
-.status-option.disabled {
-  opacity: 0.52;
+.action-option-text {
+  color: #1C1B2E;
+  font-size: 28rpx;
+  line-height: 36rpx;
+  font-weight: 600;
 }
 
 .delete-option {
@@ -1164,7 +1079,7 @@ onShow(async () => {
   font-weight: 600;
 }
 
-.status-current {
+.action-hint {
   font-size: 24rpx;
   color: #8A8A9A;
 }

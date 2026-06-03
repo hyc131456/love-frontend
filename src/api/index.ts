@@ -74,11 +74,12 @@ export const calendarApi = {
     // 更新事件
     updateEvent: (data: any) => put('/calendar/event', data),
 
-    // 删除事件
-    deleteEvent: (id: number) => del(`/calendar/event/${id}`),
+    // 调整当天事件顺序
+    reorderEvents: (data: { date: string; eventIds: number[] }) =>
+        post('/calendar/events/reorder', data),
 
-    // 完成事项
-    completeEvent: (id: number) => post(`/calendar/event/${id}/complete`)
+    // 删除事件
+    deleteEvent: (id: number) => del(`/calendar/event/${id}`)
 }
 
 /**
