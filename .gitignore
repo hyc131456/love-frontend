@@ -17,3 +17,5 @@ unpackage/dist/dev/
 
 /dist
 /docker-h5/dist
+*.log
+/docker-h5/*.tar

@@ -1,6 +1,16 @@
-# 基于nginx:1.28.2镜像
-FROM nginx:1.28.2
-# 将dist文件中的内容复制到 /usr/share/nginx/html/ 这个目录下面
-COPY dist/ /usr/share/nginx/html/dist
-# 用本地的 nginx.conf 配置来替换nginx镜像里的默认配置
-COPY nginx.conf /etc/nginx/nginx.conf
+# syntax=docker/dockerfile:1
+
+FROM node:20-alpine AS build
+WORKDIR /workspace
+
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+
+COPY . .
+RUN npm run build:h5
+
+FROM nginx:1.27-alpine
+COPY docker-h5/nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /workspace/dist/build/h5/ /usr/share/nginx/html/
+
+EXPOSE 80

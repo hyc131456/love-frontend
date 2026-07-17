@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.git/
+.idea/
+docker-h5/dist/
+docker-h5/*.tar
+*.log
+README.md
