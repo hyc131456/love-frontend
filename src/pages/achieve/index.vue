@@ -101,6 +101,7 @@ import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { achievementApi, coupleApi } from '@/api'
 import { useUserStore } from '@/stores/user'
+import { lockedAchievementDefinitions } from '@/constants/achievements'
 import AppNavBar from '@/components/AppNavBar.vue'
 
 const userStore = useUserStore()
@@ -161,7 +162,7 @@ const nextLevelInfo = computed(() => {
 
 const loadData = async () => {
   if (!userStore.userInfo?.coupleId) {
-    allBadges.value = []
+    allBadges.value = lockedAchievementDefinitions()
     coupleInfo.value = null
     return
   }
@@ -172,7 +173,7 @@ const loadData = async () => {
     allBadges.value = badges || []
   } catch (e) {
     console.error('加载成就数据失败', e)
-    allBadges.value = []
+    allBadges.value = lockedAchievementDefinitions()
   }
   
   try {

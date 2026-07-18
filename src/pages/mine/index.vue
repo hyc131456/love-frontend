@@ -210,6 +210,7 @@ import {
   wishApi
 } from '@/api'
 import { useUserStore } from '@/stores/user'
+import { achievementDefinitions } from '@/constants/achievements'
 import AppSheet from '@/components/AppSheet.vue'
 import AppTabBar from '@/components/AppTabBar.vue'
 
@@ -229,14 +230,13 @@ const levels = [
   { level: 4, name: '灵魂伴侣', min: 501, max: 9999, maxLabel: '∞' }
 ]
 
-const fallbackBadges = [
-  { key: 'fallback-1', icon: '💑', name: '初心者', unlocked: true, secondary: false },
-  { key: 'fallback-2', icon: '🗓', name: '纪念达人', unlocked: true, secondary: true },
-  { key: 'fallback-3', icon: '📖', name: '日记伙伴', unlocked: true, secondary: false },
-  { key: 'fallback-4', icon: '⭐', name: '坚持之星', unlocked: true, secondary: true },
-  { key: 'fallback-5', icon: '🍳', name: '厨房CP', unlocked: false, secondary: false },
-  { key: 'fallback-6', icon: '🤝', name: '同心协力', unlocked: false, secondary: false }
-]
+const fallbackBadges = achievementDefinitions.slice(0, 6).map((badge, index) => ({
+  key: badge.badgeId,
+  icon: badge.icon,
+  name: badge.badgeName,
+  unlocked: false,
+  secondary: index % 2 === 1
+}))
 
 const showInvite = computed(() => {
   if (!userInfo.value) return false
