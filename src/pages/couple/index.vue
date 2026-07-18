@@ -236,8 +236,13 @@ const goHome = () => {
 
 .tab {
   flex: 1;
-  text-align: center;
-  padding: 24rpx;
+  height: 80rpx;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-sizing: border-box;
   font-size: 28rpx;
   color: #5B5A6D;
   border-radius: 32rpx;
@@ -281,6 +286,25 @@ const goHome = () => {
   font-weight: 500;
   border: none;
   box-shadow: 0 8rpx 28rpx rgba(232, 99, 122, 0.25);
+}
+
+.btn-primary,
+.btn-copy,
+.btn-share,
+.btn-enter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.btn-primary::after,
+.btn-copy::after,
+.btn-share::after,
+.btn-enter::after {
+  border: none;
 }
 
 .code-section {
