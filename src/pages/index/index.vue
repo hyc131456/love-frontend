@@ -158,6 +158,7 @@ import {
   savingApi,
   wishApi
 } from '@/api'
+import { resolveAssetUrl } from '@/utils/request'
 import { useUserStore } from '@/stores/user'
 import AppTabBar from '@/components/AppTabBar.vue'
 
@@ -356,8 +357,7 @@ const normalizeImageUrl = (value: any): string => {
   if (!rawUrl || typeof rawUrl !== 'string') return ''
   const url = rawUrl.trim()
   if (!url) return ''
-  if (url.startsWith('/uploads/')) return `/api${url}`
-  return url
+  return resolveAssetUrl(url)
 }
 
 const parseImages = (value: any): string[] => {

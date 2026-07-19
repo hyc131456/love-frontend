@@ -1,4 +1,4 @@
-import { get, post, put, del } from '@/utils/request'
+import { API_BASE_URL, get, post, put, del, resolveAssetUrl } from '@/utils/request'
 
 /**
  * 用户相关接口
@@ -171,7 +171,7 @@ export const uploadApi = {
     uploadImage: (filePath: string): Promise<{ url: string, name: string }> => {
         return new Promise((resolve, reject) => {
             uni.uploadFile({
-                url: '/api/upload/image',
+                url: `${API_BASE_URL}/upload/image`,
                 filePath,
                 name: 'file',
                 header: {
@@ -180,9 +180,7 @@ export const uploadApi = {
                 success: (res) => {
                     const data = JSON.parse(res.data)
                     if (data.code === 0) {
-                        if (data.data.url && data.data.url.startsWith('/uploads/')) {
-                            data.data.url = '/api' + data.data.url
-                        }
+                        data.data.url = resolveAssetUrl(data.data.url)
                         resolve(data.data)
                     } else {
                         reject(new Error(data.message))

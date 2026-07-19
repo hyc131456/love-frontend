@@ -2,8 +2,31 @@
  * API配置
  */
 
-// 后端接口地址
-const BASE_URL = '/api'
+// H5 通过同源反向代理访问；原生 App 必须使用完整 HTTPS 地址。
+export let API_ORIGIN = ''
+export let API_BASE_URL = '/api'
+// #ifndef H5
+API_ORIGIN = 'https://rachel.4inlove.top'
+API_BASE_URL = `${API_ORIGIN}/api`
+// #endif
+
+export const resolveAssetUrl = (value: string): string => {
+    if (!value || /^https?:\/\//i.test(value) || value.startsWith('data:')) return value
+    if (value.startsWith('/api/uploads/')) return `${API_ORIGIN}${value}`
+    if (value.startsWith('/uploads/')) return `${API_BASE_URL}${value}`
+    return value
+}
+
+const normalizeAssetUrls = <T>(value: T): T => {
+    if (typeof value === 'string') return resolveAssetUrl(value) as T
+    if (Array.isArray(value)) return value.map(item => normalizeAssetUrls(item)) as T
+    if (value && typeof value === 'object') {
+        return Object.fromEntries(
+            Object.entries(value).map(([key, item]) => [key, normalizeAssetUrls(item)])
+        ) as T
+    }
+    return value
+}
 
 // 请求超时时间
 const TIMEOUT = 10000
@@ -55,7 +78,7 @@ export const request = <T = any>(options: RequestOptions): Promise<T> => {
 
     return new Promise((resolve, reject) => {
         uni.request({
-            url: BASE_URL + url,
+            url: API_BASE_URL + url,
             method,
             data,
             header,
@@ -68,7 +91,7 @@ export const request = <T = any>(options: RequestOptions): Promise<T> => {
                 const response = res.data as ApiResponse<T>
 
                 if (response.code === 0) {
-                    resolve(response.data)
+                    resolve(normalizeAssetUrls(response.data))
                 } else if (response.code === 1002) {
                     // 未登录
                     uni.removeStorageSync('token')
